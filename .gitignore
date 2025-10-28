@@ -1,0 +1,4 @@
+notebooks/data/**
+notebooks/__pycache__/**
+.DS_Store
+notebooks/parsed_data.json
