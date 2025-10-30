@@ -2,3 +2,8 @@ notebooks/data/**
 notebooks/__pycache__/**
 .DS_Store
 notebooks/parsed_data.json
+Pipfile
+notebooks/parsed_resumes.json
+Pipfile.lock
+notebooks/cleaned_resumes.json
+notebooks/cleaning_report.json
