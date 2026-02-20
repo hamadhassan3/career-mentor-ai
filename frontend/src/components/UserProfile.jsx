@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { resumeAPI } from '../config/api';
+import { resumeAPI } from '../config/api-resume-processor';
 
 const UserProfile = ({ resumeData, onUpdate }) => {
   const [editMode, setEditMode] = useState({});

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { resumeAPI } from './config/api';
+import { resumeAPI } from './config/api-resume-processor.js';
 import ResumeUpload from './components/ResumeUpload.jsx';
 import UserProfile from './components/UserProfile.jsx';
 import NextBestStep from './components/NextBestStep.jsx';
