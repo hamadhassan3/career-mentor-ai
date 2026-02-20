@@ -216,7 +216,6 @@ def find_best_language_match(user_skill, all_predefined_languages, language_to_c
 
 def clean_skills(skills_list):
     """Clean and standardize a list of skills, separating IT, soft, and language skills"""
-    print("KAJSHDKJSDJLSAKJDLS")
 
     if not isinstance(skills_list, list):
         return [], [], [], [], [], []
@@ -267,7 +266,6 @@ def clean_skills(skills_list):
                     cleaned_soft_skills.append(soft_match['standardized_name'])
                     soft_skill_categories.append(soft_match['category'])
     
-    print("HEHREHREKRJHEKJRH")
     # Remove duplicates while preserving order
     seen_it = set()
     unique_it_skills = []
