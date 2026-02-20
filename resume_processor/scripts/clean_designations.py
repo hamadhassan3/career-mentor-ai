@@ -3,9 +3,9 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import List, Tuple, Dict
 
-from extract_occupations import get_matching_occupations
+from .extract_occupations import get_matching_occupations
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).parent / "data"
 
 
 # -------------------------------------------------

@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_RESUME_PROCESSOR_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
 
 export const resumeAPI = {
   uploadResume: (formData) => {
-    return apiClient.post('/resumes/upload/', formData, {
+    return apiClient.post('/resumes/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

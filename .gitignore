@@ -9,3 +9,4 @@ resume_processor/notebooks/cleaned_resumes.json
 resume_processor/notebooks/cleaning_report.json
 resume_processor/data
 **/__pycache__/**
+**/db.sqlite3
