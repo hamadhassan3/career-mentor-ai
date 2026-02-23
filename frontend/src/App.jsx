@@ -7,9 +7,10 @@ import CareerPathway from './components/CareerPathway.jsx';
 
 function App() {
   const [resumeData, setResumeData] = useState(null);
+  const [targetDesignation, setTargetDesignation] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleResumeUpload = async (file) => {
+  const handleResumeUpload = async (file, designation) => {
     setLoading(true);
     try {
       const formData = new FormData();
@@ -17,6 +18,7 @@ function App() {
 
       const response = await resumeAPI.uploadResume(formData);
       setResumeData(response.data);
+      setTargetDesignation(designation);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload resume. Please try again.');
@@ -41,7 +43,7 @@ function App() {
         {!resumeData ? (
           <div className="flex justify-center items-center min-h-[60vh]">
             <ResumeUpload 
-              onUpload={handleResumeUpload} 
+              onProceed={handleResumeUpload} 
               loading={loading} 
             />
           </div>
@@ -55,8 +57,8 @@ function App() {
             </div>
             
             <div className="space-y-6">
-              <NextBestStep resumeData={resumeData} />
-              <CareerPathway resumeData={resumeData} />
+              <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation}/>
+              <CareerPathway resumeData={resumeData} targetDesignation={targetDesignation}/>
             </div>
           </div>
         )}

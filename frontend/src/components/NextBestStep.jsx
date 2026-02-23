@@ -1,28 +1,40 @@
 import React, { useState } from 'react';
 
-const NextBestStep = ({ resumeData }) => {
+import { resumeAPI } from '../config/api-resume-processor';
+
+const NextBestStep = ({ resumeData, targetDesignation }) => {
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const generateRecommendations = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API endpoint when available
-      // This is a mock implementation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setRecommendations({
-        title: "Enhance Your Cloud Skills",
-        description: "Based on your profile, focusing on cloud technologies would significantly boost your career prospects.",
-        steps: [
-          "Complete AWS Solutions Architect certification",
-          "Build a cloud-native project using microservices",
-          "Learn Infrastructure as Code (Terraform/CloudFormation)",
-          "Practice with containerization (Docker/Kubernetes)"
-        ],
-        timeline: "3-6 months",
-        impact: "High"
+      resumeAPI.predictNextSkills(
+        { itSkills: resumeData.it_skill_categories,
+          softSkills: resumeData.soft_skills, 
+          designation: targetDesignation
+        }).then((response) => {
+          const formattedSkills = response.data.predicted_next_it_skills
+          .map(skill =>
+            skill
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ')
+          );
+          setRecommendations({
+            title: formattedSkills[0],
+            description: "Based on your profile, focusing on cloud technologies would significantly boost your career prospects.",
+            steps: [
+              "Complete AWS Solutions Architect certification",
+              "Build a cloud-native project using microservices",
+              "Learn Infrastructure as Code (Terraform/CloudFormation)",
+              "Practice with containerization (Docker/Kubernetes)"
+            ],
+            timeline: "3-6 months",
+            impact: "High"
+        });
       });
+      
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
     } finally {

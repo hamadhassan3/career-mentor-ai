@@ -1,3 +1,4 @@
+resume_processor/model
 resume_processor/scripts/data/**
 notebooks/__pycache__/**
 .DS_Store

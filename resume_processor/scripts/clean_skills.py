@@ -121,12 +121,12 @@ def find_best_skill_match(user_skill, all_predefined_skills, skill_to_category, 
             continue
             
         # Check if user skill contains the predefined skill or vice versa
-        if predefined_skill in user_skill_clean or user_skill_clean in predefined_skill:
-            score = max(len(predefined_skill) / len(user_skill_clean), 
-                       len(user_skill_clean) / len(predefined_skill))
-            if score > best_score and score >= threshold:
-                best_score = score
-                best_match = skill_to_category[predefined_skill]
+        # if predefined_skill in user_skill_clean or user_skill_clean in predefined_skill:
+        #     score = max(len(predefined_skill) / len(user_skill_clean), 
+        #                len(user_skill_clean) / len(predefined_skill))
+        #     if score > best_score and score >= threshold:
+        #         best_score = score
+        #         best_match = skill_to_category[predefined_skill]
         
         # Similarity matching
         sim_score = similarity(user_skill_clean, predefined_skill)
@@ -136,7 +136,7 @@ def find_best_skill_match(user_skill, all_predefined_skills, skill_to_category, 
     
     return best_match
 
-def find_best_soft_skill_match(user_skill, all_predefined_soft_skills, soft_skill_to_category, threshold=0.75):
+def find_best_soft_skill_match(user_skill, all_predefined_soft_skills, soft_skill_to_category, threshold=0.65):
     """Find the best matching predefined soft skill for a user skill"""
     user_skill_clean = re.sub(r'[^a-zA-Z0-9\s\-]', '', user_skill.lower().strip())
     
@@ -162,12 +162,12 @@ def find_best_soft_skill_match(user_skill, all_predefined_soft_skills, soft_skil
                 return soft_skill_to_category[predefined_skill]
         
         # Check if user skill contains the predefined skill or vice versa
-        if predefined_skill in user_skill_clean or user_skill_clean in predefined_skill:
-            score = max(len(predefined_skill) / len(user_skill_clean), 
-                       len(user_skill_clean) / len(predefined_skill))
-            if score > best_score and score >= threshold:
-                best_score = score
-                best_match = soft_skill_to_category[predefined_skill]
+        # if predefined_skill in user_skill_clean or user_skill_clean in predefined_skill:
+        #     score = max(len(predefined_skill) / len(user_skill_clean), 
+        #                len(user_skill_clean) / len(predefined_skill))
+        #     if score > best_score and score >= threshold:
+        #         best_score = score
+        #         best_match = soft_skill_to_category[predefined_skill]
         
         # Similarity matching
         sim_score = similarity(user_skill_clean, predefined_skill)
@@ -177,7 +177,7 @@ def find_best_soft_skill_match(user_skill, all_predefined_soft_skills, soft_skil
     
     return best_match
 
-def find_best_language_match(user_skill, all_predefined_languages, language_to_category, threshold=0.85):
+def find_best_language_match(user_skill, all_predefined_languages, language_to_category, threshold=0.9):
     """Find the best matching predefined language for a user skill"""
     user_skill_clean = re.sub(r'[^a-zA-Z0-9\s]', '', user_skill.lower().strip())
     

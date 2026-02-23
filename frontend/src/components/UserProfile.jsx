@@ -46,6 +46,39 @@ const UserProfile = ({ resumeData, onUpdate }) => {
     setFormData({ ...formData, [field]: [...formData[field], ''] });
   };
 
+  const fetchSkillsByType = async (skillType) => {
+    setSkillsLoading(true);
+    try {
+      let response;
+      switch (skillType) {
+        case 'it_skills':
+          response = await resumeAPI.getITSkills();
+          break;
+        case 'soft_skills':
+          response = await resumeAPI.getSoftSkills();
+          break;
+        case 'languages':
+          response = await resumeAPI.getLanguages();
+          break;
+        default:
+          break;
+      }
+      if (response && response.data) {
+        setAllSkills(prevSkills => ({
+          ...prevSkills,
+          [skillType]: {
+            ...prevSkills[skillType],
+            "custom": response.data
+          }
+        }));
+      }
+    } catch (error) {
+      console.error(`Failed to fetch ${skillType}:`, error);
+    } finally {
+      setSkillsLoading(false);
+    }
+  };
+
   const removeArrayItem = (field, index) => {
     const newArray = formData[field].filter((_, i) => i !== index);
     setFormData({ ...formData, [field]: newArray });
@@ -171,7 +204,7 @@ const UserProfile = ({ resumeData, onUpdate }) => {
                     <option value={item}>{item}</option>
                     {Object.entries(availableSkills).map(([category, skills]) => (
                       <optgroup key={category} label={category}>
-                        {skills.filter(skill => !array.includes(skill)).map(skill => (
+                        {skills.map(skill => (
                           <option key={skill} value={skill}>{skill}</option>
                         ))}
                       </optgroup>
@@ -213,7 +246,7 @@ const UserProfile = ({ resumeData, onUpdate }) => {
               
               <div className="flex flex-col sm:flex-row gap-2">
                 <button 
-                  onClick={() => addArrayItem(field)} 
+                  onClick={() => fetchSkillsByType(skillType)}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   + Add Custom

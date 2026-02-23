@@ -39,19 +39,32 @@ export const resumeAPI = {
   },
   
   getAllSkills: () => {
-    return apiClient.get('/resumes/skills/all/');
+    return apiClient.get('/skills/all');
   },
   
   getITSkills: () => {
-    return apiClient.get('/resumes/skills/it/');
+    return apiClient.get('/skills/it');
   },
   
   getSoftSkills: () => {
-    return apiClient.get('/resumes/skills/soft/');
+    return apiClient.get('/skills/soft');
   },
   
   getLanguages: () => {
-    return apiClient.get('/resumes/skills/languages/');
+    return apiClient.get('/skills/languages');
+  },
+
+  getDesignations: () => {
+    return apiClient.get('/designations')
+  },
+
+  predictNextSkills: ({ itSkills = [], softSkills = [], designation = "" }) => {
+    console.log(itSkills, softSkills, designation);
+    return apiClient.post('/predict', {
+      it_skill_categories: itSkills,
+      soft_skills: softSkills,
+      desired_designation: designation,
+    });
   },
 };
 
