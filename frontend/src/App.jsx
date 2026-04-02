@@ -106,6 +106,12 @@ function Dashboard() {
   );
 }
 
+function GuestOnly({ children }) {
+  const { user } = useAuth();
+  if (!user) return children;
+  return <Navigate to={user.totp_confirmed ? '/' : '/totp-setup'} />;
+}
+
 function App() {
   const { user, loading, pendingTotp } = useAuth();
 
@@ -119,11 +125,11 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/" /> : <Signup />} />
+      <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+      <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
+      <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+      <Route path="/reset-password/:uid/:token" element={<GuestOnly><ResetPassword /></GuestOnly>} />
       <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
       <Route
         path="/totp-setup"
         element={
