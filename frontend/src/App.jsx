@@ -13,23 +13,26 @@ import TOTPVerify from './pages/TOTPVerify.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 
+function Spinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-indigo-600"></div>
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
+  if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" />;
-
-  // Force TOTP setup if not yet confirmed
   if (!user.totp_confirmed) return <Navigate to="/totp-setup" />;
-
   return children;
+}
+
+function GuestOnly({ children }) {
+  const { user } = useAuth();
+  if (!user) return children;
+  return <Navigate to={user.totp_confirmed ? '/' : '/totp-setup'} />;
 }
 
 function Dashboard() {
@@ -43,7 +46,6 @@ function Dashboard() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-
       const response = await resumeAPI.uploadResume(formData);
       setResumeData(response.data);
       setTargetDesignation(designation);
@@ -55,49 +57,45 @@ function Dashboard() {
     }
   };
 
-  const updateResumeData = (newData) => {
-    setResumeData(newData);
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold">Career Mentor</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-indigo-100">
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <span className="font-semibold text-gray-900">Career Mentor</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500 hidden sm:block">
               {user.first_name || user.username}
             </span>
-            <button
-              onClick={logout}
-              className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition"
-            >
-              Logout
+            <button onClick={logout} className="btn-ghost text-sm py-1.5 px-3">
+              Log out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 max-w-7xl">
+      {/* Main */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 md:py-8">
         {!resumeData ? (
-          <div className="flex justify-center items-center min-h-[60vh]">
-            <ResumeUpload
-              onProceed={handleResumeUpload}
-              loading={loading}
-            />
+          <div className="flex justify-center items-center min-h-[65vh] animate-fade-in">
+            <ResumeUpload onProceed={handleResumeUpload} loading={loading} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            <div className="space-y-6">
-              <UserProfile
-                resumeData={resumeData}
-                onUpdate={updateResumeData}
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up">
+            <div className="lg:col-span-5 space-y-6">
+              <UserProfile resumeData={resumeData} onUpdate={setResumeData} />
             </div>
-
-            <div className="space-y-6">
-              <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation}/>
-              <CareerPathway resumeData={resumeData} targetDesignation={targetDesignation}/>
+            <div className="lg:col-span-7 space-y-6">
+              <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation} />
+              <CareerPathway resumeData={resumeData} targetDesignation={targetDesignation} />
             </div>
           </div>
         )}
@@ -106,22 +104,10 @@ function Dashboard() {
   );
 }
 
-function GuestOnly({ children }) {
-  const { user } = useAuth();
-  if (!user) return children;
-  return <Navigate to={user.totp_confirmed ? '/' : '/totp-setup'} />;
-}
-
 function App() {
   const { user, loading, pendingTotp } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
+  if (loading) return <Spinner />;
 
   return (
     <Routes>
@@ -132,22 +118,9 @@ function App() {
       <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
       <Route
         path="/totp-setup"
-        element={
-          user ? (
-            user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
+        element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
       />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -23,62 +23,65 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm animate-fade-in-up">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Career Mentor
-          </h1>
-          <p className="text-slate-500 mt-2">Reset your password</p>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">Reset password</h1>
+          <p className="text-gray-500 mt-1 text-sm">We'll send you a reset link</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-5">
+        <div className="card p-6">
           {submitted ? (
-            <div className="text-center space-y-4">
-              <div className="text-green-600 bg-green-50 px-4 py-3 rounded-lg text-sm">
-                If an account with that email exists, a password reset link has been sent.
+            <div className="text-center space-y-4 animate-fade-in">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-2">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
+              <p className="text-sm text-gray-600">
+                If an account with that email exists, a password reset link has been sent.
+              </p>
+              <Link to="/login" className="btn-secondary inline-block text-sm">
                 Back to sign in
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm animate-fade-in">
                   {error}
                 </div>
               )}
 
-              <p className="text-sm text-slate-600">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
-
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                  Email
-                </label>
+                <label htmlFor="email" className="label">Email address</label>
                 <input
                   id="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  className="input"
                   placeholder="john@example.com"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Sending...' : 'Send Reset Link'}
+              <button type="submit" disabled={loading} className="btn-primary w-full">
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Sending...
+                  </span>
+                ) : 'Send Reset Link'}
               </button>
 
-              <p className="text-center text-sm text-slate-500">
-                <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              <p className="text-center">
+                <Link to="/login" className="text-sm text-gray-500 hover:text-gray-700">
                   Back to sign in
                 </Link>
               </p>

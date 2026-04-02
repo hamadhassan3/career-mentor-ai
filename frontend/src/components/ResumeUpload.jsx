@@ -4,40 +4,27 @@ import { resumeAPI } from "../config/api-resume-processor";
 
 const ResumeUpload = ({ loading, onProceed }) => {
   const fileInputRef = useRef(null);
-
   const [resume, setResume] = useState(null);
   const [designation, setDesignation] = useState("");
-
   const [designations, setDesignations] = useState([]);
   const [designationLoading, setDesignationLoading] = useState(true);
+  const [dragOver, setDragOver] = useState(false);
 
-  /* ---------------- Fetch Designations ---------------- */
   useEffect(() => {
     const fetchDesignations = async () => {
       try {
         setDesignationLoading(true);
-
         const response = await resumeAPI.getDesignations();
-
-        const data =
-          response.data?.designations ||
-          response.data?.data ||
-          response.data ||
-          [];
-
+        const data = response.data?.designations || response.data?.data || response.data || [];
         setDesignations(data);
       } catch (err) {
         console.error("Failed to load designations", err);
-        alert("Unable to load designations");
       } finally {
         setDesignationLoading(false);
       }
     };
-
     fetchDesignations();
   }, []);
-
-  /* ---------------- File Handling ---------------- */
 
   const handleFile = (file) => {
     if (file && file.type === "application/pdf") {
@@ -47,41 +34,22 @@ const ResumeUpload = ({ loading, onProceed }) => {
     }
   };
 
-  const handleFileSelect = (event) => {
-    handleFile(event.target.files[0]);
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    handleFile(event.dataTransfer.files[0]);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const handleClickUpload = () => {
-    fileInputRef.current.click();
-  };
-
-  /* ---------------- Validation ---------------- */
-
   const canProceed = Boolean(resume && designation);
 
-  /* ---------------- UI ---------------- */
-
   return (
-    <div className="w-full max-w-lg mx-auto p-4 space-y-6">
+    <div className="w-full max-w-md space-y-5">
+      <div className="text-center mb-2">
+        <h2 className="text-xl font-semibold text-gray-900">Get started</h2>
+        <p className="text-sm text-gray-500 mt-1">Upload your resume and select your target role</p>
+      </div>
 
       {/* Target Designation */}
       <div>
-        <h3 className="text-lg font-semibold mb-2">
-          Target Designation
-        </h3>
-
+        <label className="label">Target Role</label>
         {designationLoading ? (
-          <div className="border rounded-lg px-4 py-3 text-gray-500">
-            Loading designations...
+          <div className="input flex items-center text-gray-400 text-sm">
+            <svg className="animate-spin h-4 w-4 mr-2 text-gray-300" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            Loading roles...
           </div>
         ) : (
           <SearchableDropdown
@@ -94,48 +62,70 @@ const ResumeUpload = ({ loading, onProceed }) => {
       </div>
 
       {/* Upload Area */}
-      <div
-        className="border-2 border-dashed border-gray-300 hover:border-indigo-500 rounded-xl p-8 md:p-12 text-center bg-white transition-all duration-300 hover:bg-indigo-50 cursor-pointer"
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onClick={handleClickUpload}
-      >
-        <div className="text-4xl md:text-5xl mb-4">📄</div>
+      <div>
+        <label className="label">Resume</label>
+        <div
+          className={`
+            relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
+            transition-all duration-200
+            ${dragOver
+              ? 'border-indigo-400 bg-indigo-50'
+              : resume
+                ? 'border-emerald-300 bg-emerald-50/50'
+                : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:bg-gray-50'
+            }
+          `}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onClick={() => fileInputRef.current.click()}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={(e) => handleFile(e.target.files[0])}
+            className="hidden"
+          />
 
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">
-          Upload Your Resume
-        </h2>
-
-        <p className="text-gray-600 mb-6">
-          Drag & drop your PDF resume here or click to browse
-        </p>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-
-        <p className="text-gray-500 text-sm">
-          Only PDF files are supported
-        </p>
-
-        {resume && (
-          <p className="mt-4 text-green-600 text-sm font-medium">
-            ✅ {resume.name}
-          </p>
-        )}
+          {resume ? (
+            <div className="animate-fade-in space-y-2">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-700">{resume.name}</p>
+              <p className="text-xs text-gray-400">Click to change file</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100">
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-500">
+                <span className="font-medium text-indigo-600">Upload</span> or drag & drop
+              </p>
+              <p className="text-xs text-gray-400">PDF only</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Proceed Button */}
+      {/* Proceed */}
       <button
         onClick={() => onProceed?.(resume, designation)}
         disabled={!canProceed || loading}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition"
+        className="btn-primary w-full"
       >
-        {loading ? "Processing..." : "Proceed"}
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            Processing...
+          </span>
+        ) : 'Continue'}
       </button>
     </div>
   );

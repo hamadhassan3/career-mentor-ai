@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { resumeAPI } from '../config/api-resume-processor';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
@@ -9,32 +8,19 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
   const generateRecommendations = async () => {
     setLoading(true);
     try {
-      resumeAPI.predictNextSkills(
-        { itSkills: resumeData.it_skill_categories,
-          softSkills: resumeData.soft_skills, 
-          designation: targetDesignation
-        }).then((response) => {
-          const formattedSkills = response.data.predicted_next_it_skills
-          .map(skill =>
-            skill
-              .split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ')
-          );
-          setRecommendations({
-            title: formattedSkills[0],
-            description: "",
-            steps: [
-              "Complete AWS Solutions Architect certification",
-              "Build a cloud-native project using microservices",
-              "Learn Infrastructure as Code (Terraform/CloudFormation)",
-              "Practice with containerization (Docker/Kubernetes)"
-            ],
-            timeline: "3-6 months",
-            impact: "High"
-        });
+      const response = await resumeAPI.predictNextSkills({
+        itSkills: resumeData.it_skill_categories,
+        softSkills: resumeData.soft_skills,
+        designation: targetDesignation,
       });
-      
+      const formattedSkills = response.data.predicted_next_it_skills.map(skill =>
+        skill.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      );
+      setRecommendations({
+        title: formattedSkills[0],
+        skills: formattedSkills,
+        impact: 'High',
+      });
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
     } finally {
@@ -43,64 +29,61 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="border-b border-gray-200 pb-4 mb-6">
-        <h3 className="text-xl font-semibold text-gray-800">Next Best Step</h3>
-        <p className="text-sm text-gray-600 mt-1">Get personalized recommendations for your career growth</p>
+    <div className="card p-5">
+      <div className="mb-5">
+        <h3 className="text-lg font-semibold text-gray-900">Next Best Step</h3>
+        <p className="text-xs text-gray-400 mt-0.5">AI-powered skill recommendations</p>
       </div>
 
       {!recommendations ? (
         <div className="text-center py-8">
-          <div className="text-4xl mb-4">🎯</div>
-          <p className="text-gray-600 mb-6 text-sm md:text-base max-w-sm mx-auto leading-relaxed">
-            Click below to get AI-powered recommendations tailored to your profile
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-50 mb-4">
+            <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">
+            Get personalized recommendations based on your profile and target role
           </p>
-          <button 
-            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 disabled:cursor-not-allowed transform hover:scale-105 disabled:transform-none"
-            onClick={generateRecommendations}
-            disabled={loading}
-          >
-            {loading ? 'Generating...' : 'Generate Next Best Step'}
+          <button onClick={generateRecommendations} disabled={loading} className="btn-primary">
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                Analyzing...
+              </span>
+            ) : 'Generate Recommendations'}
           </button>
         </div>
       ) : (
-        <div className="animate-fade-in">
-          <div className="border border-gray-200 rounded-lg p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-              <h4 className="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">{recommendations.title}</h4>
-              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
-                {recommendations.impact} Impact
-              </span>
-            </div>
-            
-            <p className="text-gray-600 mb-6 leading-relaxed">{recommendations.description}</p>
-            
-            <div className="mb-6">
-              <h5 className="text-base font-medium text-gray-800 mb-3">Recommended Actions:</h5>
-              <ul className="space-y-2">
-                {/*recommendations.steps.map((step, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium mt-0.5 flex-shrink-0">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700 text-sm">{step}</span>
-                  </li>
-                ))*/}
-              </ul>
-            </div>
-            
-            {/* <div className="text-sm text-gray-600 mb-6">
-              <strong>Timeline:</strong> {recommendations.timeline}
-            </div> */}
-            
-            <button 
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed text-sm"
-              onClick={generateRecommendations}
-              disabled={loading}
-            >
-              {loading ? 'Generating...' : 'Generate New Recommendation'}
-            </button>
+        <div className="space-y-4 animate-fade-in-up">
+          <div className="flex items-start justify-between">
+            <h4 className="font-semibold text-gray-900">{recommendations.title}</h4>
+            <span className="tag tag-amber text-xs">{recommendations.impact} Impact</span>
           </div>
+
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">Recommended Skills</p>
+            <div className="flex flex-wrap gap-1.5">
+              {recommendations.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="tag tag-indigo animate-fade-in"
+                  style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={generateRecommendations} disabled={loading} className="btn-secondary text-sm w-full">
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                Regenerating...
+              </span>
+            ) : 'Regenerate'}
+          </button>
         </div>
       )}
     </div>

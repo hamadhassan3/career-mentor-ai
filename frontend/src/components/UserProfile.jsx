@@ -8,33 +8,23 @@ const UserProfile = ({ resumeData, onUpdate }) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
 
   useEffect(() => {
+    const fetchAllSkills = async () => {
+      setSkillsLoading(true);
+      try {
+        const response = await resumeAPI.getAllSkills();
+        setAllSkills(response.data);
+      } catch (error) {
+        console.error('Failed to fetch skills:', error);
+      } finally {
+        setSkillsLoading(false);
+      }
+    };
     fetchAllSkills();
   }, []);
 
-  const fetchAllSkills = async () => {
-    setSkillsLoading(true);
-    try {
-      const response = await resumeAPI.getAllSkills();
-      setAllSkills(response.data);
-    } catch (error) {
-      console.error('Failed to fetch skills:', error);
-    } finally {
-      setSkillsLoading(false);
-    }
-  };
-
-  const handleEdit = (field) => {
-    setEditMode({ ...editMode, [field]: true });
-  };
-
-  const handleSave = (field) => {
-    setEditMode({ ...editMode, [field]: false });
-    onUpdate(formData);
-  };
-
-  const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-  };
+  const handleEdit = (field) => setEditMode({ ...editMode, [field]: true });
+  const handleSave = (field) => { setEditMode({ ...editMode, [field]: false }); onUpdate(formData); };
+  const handleChange = (field, value) => setFormData({ ...formData, [field]: value });
 
   const handleArrayChange = (field, index, value) => {
     const newArray = [...formData[field]];
@@ -42,35 +32,21 @@ const UserProfile = ({ resumeData, onUpdate }) => {
     setFormData({ ...formData, [field]: newArray });
   };
 
-  const addArrayItem = (field) => {
-    setFormData({ ...formData, [field]: [...formData[field], ''] });
-  };
+  const addArrayItem = (field) => setFormData({ ...formData, [field]: [...formData[field], ''] });
+  const removeArrayItem = (field, index) => setFormData({ ...formData, [field]: formData[field].filter((_, i) => i !== index) });
 
   const fetchSkillsByType = async (skillType) => {
     setSkillsLoading(true);
     try {
       let response;
       switch (skillType) {
-        case 'it_skills':
-          response = await resumeAPI.getITSkills();
-          break;
-        case 'soft_skills':
-          response = await resumeAPI.getSoftSkills();
-          break;
-        case 'languages':
-          response = await resumeAPI.getLanguages();
-          break;
-        default:
-          break;
+        case 'it_skills': response = await resumeAPI.getITSkills(); break;
+        case 'soft_skills': response = await resumeAPI.getSoftSkills(); break;
+        case 'languages': response = await resumeAPI.getLanguages(); break;
+        default: break;
       }
-      if (response && response.data) {
-        setAllSkills(prevSkills => ({
-          ...prevSkills,
-          [skillType]: {
-            ...prevSkills[skillType],
-            "custom": response.data
-          }
-        }));
+      if (response?.data) {
+        setAllSkills(prev => ({ ...prev, [skillType]: { ...prev[skillType], custom: response.data } }));
       }
     } catch (error) {
       console.error(`Failed to fetch ${skillType}:`, error);
@@ -79,107 +55,73 @@ const UserProfile = ({ resumeData, onUpdate }) => {
     }
   };
 
-  const removeArrayItem = (field, index) => {
-    const newArray = formData[field].filter((_, i) => i !== index);
-    setFormData({ ...formData, [field]: newArray });
-  };
-
   const renderEditableField = (label, field, value) => {
     const isEditing = editMode[field];
-    
     return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-        <div className="flex items-center gap-2">
-          {isEditing ? (
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => handleChange(field, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <button 
-                onClick={() => handleSave(field)} 
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between w-full">
-              <span className="text-gray-900">{value}</span>
-              <button 
-                onClick={() => handleEdit(field)} 
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-medium transition-colors"
-              >
-                Edit
-              </button>
-            </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-500">{label}</span>
+          {!isEditing && (
+            <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+              Edit
+            </button>
           )}
         </div>
+        {isEditing ? (
+          <div className="flex gap-2 animate-fade-in">
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => handleChange(field, e.target.value)}
+              className="input flex-1"
+            />
+            <button onClick={() => handleSave(field)} className="btn-primary text-sm py-2 px-4">Save</button>
+          </div>
+        ) : (
+          <p className="text-gray-900 text-sm">{value}</p>
+        )}
       </div>
     );
   };
 
+  const renderTags = (array, field, isSkill = false) => (
+    <div className="flex flex-wrap gap-1.5">
+      {array.map((item, index) => (
+        <span key={index} className={`tag ${isSkill ? 'tag-indigo' : ''}`}>
+          {item}
+        </span>
+      ))}
+      {array.length === 0 && <span className="text-xs text-gray-400">None listed</span>}
+    </div>
+  );
+
   const renderEditableArray = (label, field, array) => {
     const isEditing = editMode[field];
-    
     return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-        <div className="space-y-2">
-          {isEditing ? (
-            <div className="space-y-3">
-              {array.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={item}
-                    onChange={(e) => handleArrayChange(field, index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                  <button 
-                    onClick={() => removeArrayItem(field, index)} 
-                    className="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md flex items-center justify-center transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button 
-                  onClick={() => addArrayItem(field)} 
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  + Add
-                </button>
-                <button 
-                  onClick={() => handleSave(field)} 
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-500">{label}</span>
+          {!isEditing ? (
+            <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
           ) : (
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {array.map((item, index) => (
-                  <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm">
-                    {item}
-                  </span>
-                ))}
-              </div>
-              <button 
-                onClick={() => handleEdit(field)} 
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-medium transition-colors"
-              >
-                Edit
-              </button>
-            </div>
+            <button onClick={() => handleSave(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Done</button>
           )}
         </div>
+        {isEditing ? (
+          <div className="space-y-2 animate-fade-in">
+            {array.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input type="text" value={item} onChange={(e) => handleArrayChange(field, index, e.target.value)} className="input flex-1 text-sm" />
+                <button onClick={() => removeArrayItem(field, index)} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition-colors text-sm">
+                  &times;
+                </button>
+              </div>
+            ))}
+            <button onClick={() => addArrayItem(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+              + Add item
+            </button>
+          </div>
+        ) : renderTags(array, field)}
       </div>
     );
   };
@@ -187,122 +129,87 @@ const UserProfile = ({ resumeData, onUpdate }) => {
   const renderSkillsArray = (label, field, array, skillType) => {
     const isEditing = editMode[field];
     const availableSkills = allSkills[skillType] || {};
-    
+
     return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-        <div className="space-y-2">
-          {isEditing ? (
-            <div className="space-y-3">
-              {array.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <select
-                    value={item}
-                    onChange={(e) => handleArrayChange(field, index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                  >
-                    <option value={item}>{item}</option>
-                    {Object.entries(availableSkills).map(([category, skills]) => (
-                      <optgroup key={category} label={category}>
-                        {skills.map(skill => (
-                          <option key={skill} value={skill}>{skill}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <button 
-                    onClick={() => removeArrayItem(field, index)} 
-                    className="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md flex items-center justify-center transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              
-              {skillsLoading ? (
-                <div className="text-gray-500 text-sm italic text-center py-2">Loading skills...</div>
-              ) : Object.keys(availableSkills).length > 0 ? (
-                <div className="mb-2">
-                  <select 
-                    onChange={(e) => {
-                      if (e.target.value && !array.includes(e.target.value)) {
-                        setFormData({ ...formData, [field]: [...array, e.target.value] });
-                      }
-                      e.target.value = '';
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                  >
-                    <option value="">+ Add a skill</option>
-                    {Object.entries(availableSkills).map(([category, skills]) => (
-                      <optgroup key={category} label={category}>
-                        {skills.filter(skill => !array.includes(skill)).map(skill => (
-                          <option key={skill} value={skill}>{skill}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
-              ) : null}
-              
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button 
-                  onClick={() => fetchSkillsByType(skillType)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  + Add Custom
-                </button>
-                <button 
-                  onClick={() => handleSave(field)} 
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-500">{label}</span>
+          {!isEditing ? (
+            <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
           ) : (
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {array.map((item, index) => (
-                  <span key={index} className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-md text-sm">
-                    {item}
-                  </span>
-                ))}
-              </div>
-              <button 
-                onClick={() => handleEdit(field)} 
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-medium transition-colors"
-              >
-                Edit
-              </button>
-            </div>
+            <button onClick={() => handleSave(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Done</button>
           )}
         </div>
+        {isEditing ? (
+          <div className="space-y-2 animate-fade-in">
+            {array.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <select
+                  value={item}
+                  onChange={(e) => handleArrayChange(field, index, e.target.value)}
+                  className="input flex-1 text-sm"
+                >
+                  <option value={item}>{item}</option>
+                  {Object.entries(availableSkills).map(([category, skills]) => (
+                    <optgroup key={category} label={category}>
+                      {skills.map(skill => (
+                        <option key={skill} value={skill}>{skill}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <button onClick={() => removeArrayItem(field, index)} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition-colors text-sm">
+                  &times;
+                </button>
+              </div>
+            ))}
+
+            {!skillsLoading && Object.keys(availableSkills).length > 0 && (
+              <select
+                onChange={(e) => {
+                  if (e.target.value && !array.includes(e.target.value)) {
+                    setFormData({ ...formData, [field]: [...array, e.target.value] });
+                  }
+                  e.target.value = '';
+                }}
+                className="input text-sm text-gray-400"
+              >
+                <option value="">+ Add a skill</option>
+                {Object.entries(availableSkills).map(([category, skills]) => (
+                  <optgroup key={category} label={category}>
+                    {skills.filter(skill => !array.includes(skill)).map(skill => (
+                      <option key={skill} value={skill}>{skill}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            )}
+
+            <button onClick={() => fetchSkillsByType(skillType)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+              + Load more skills
+            </button>
+          </div>
+        ) : renderTags(array, field, true)}
       </div>
     );
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="border-b border-gray-200 pb-4 mb-6">
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Your Profile</h2>
-        <div className="text-sm text-gray-500 mt-1">
-          Uploaded: {new Date(formData.created_at).toLocaleDateString()}
-        </div>
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
+        <span className="text-xs text-gray-400">
+          {new Date(formData.created_at).toLocaleDateString()}
+        </span>
       </div>
 
-      <div className="space-y-6">
-        {renderEditableField('Total Experience', 'total_exp', `${formData.total_exp} years`)}
-        
-        {renderEditableArray('University', 'university', formData.university || [])}
-        
-        {renderEditableArray('Designations', 'designition', formData.designition || [])}
-        
+      <div className="space-y-5 divide-y divide-gray-100 [&>*:not(:first-child)]:pt-5">
+        {renderEditableField('Experience', 'total_exp', `${formData.total_exp} years`)}
+        {renderEditableArray('Education', 'university', formData.university || [])}
+        {renderEditableArray('Roles', 'designition', formData.designition || [])}
         {renderEditableArray('Degrees', 'degree', formData.degree || [])}
-        
         {renderSkillsArray('IT Skills', 'it_skills', formData.it_skills || [], 'it_skills')}
-        
         {renderSkillsArray('Soft Skills', 'soft_skills', formData.soft_skills || [], 'soft_skills')}
-        
         {renderSkillsArray('Languages', 'languages', formData.languages || [], 'languages')}
       </div>
     </div>
