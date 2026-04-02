@@ -1,0 +1,60 @@
+import axios from 'axios';
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+const backendClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+backendClient.interceptors.request.use((config) => {
+  const tokens = localStorage.getItem('tokens');
+  if (tokens) {
+    const { access } = JSON.parse(tokens);
+    config.headers.Authorization = `Bearer ${access}`;
+  }
+  return config;
+});
+
+backendClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const tokens = localStorage.getItem('tokens');
+      if (tokens) {
+        try {
+          const { refresh } = JSON.parse(tokens);
+          const res = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, { refresh });
+          const newTokens = { access: res.data.access, refresh };
+          localStorage.setItem('tokens', JSON.stringify(newTokens));
+          originalRequest.headers.Authorization = `Bearer ${res.data.access}`;
+          return backendClient(originalRequest);
+        } catch {
+          localStorage.removeItem('tokens');
+          window.location.href = '/login';
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const authAPI = {
+  register: (data) => backendClient.post('/auth/register/', data),
+  login: (data) => backendClient.post('/auth/login/', data),
+  totpLoginVerify: (data) => backendClient.post('/auth/totp/login/', data),
+  totpSetup: () => backendClient.get('/auth/totp/setup/'),
+  totpConfirm: (data) => backendClient.post('/auth/totp/confirm/', data),
+  me: () => backendClient.get('/auth/me/'),
+  passwordResetRequest: (data) => backendClient.post('/auth/password-reset/', data),
+  passwordResetConfirm: (data) => backendClient.post('/auth/password-reset/confirm/', data),
+};
+
+export default backendClient;

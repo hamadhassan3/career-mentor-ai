@@ -23,7 +23,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
           );
           setRecommendations({
             title: formattedSkills[0],
-            description: "Based on your profile, focusing on cloud technologies would significantly boost your career prospects.",
+            description: "",
             steps: [
               "Complete AWS Solutions Architect certification",
               "Build a cloud-native project using microservices",
@@ -78,20 +78,20 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
             <div className="mb-6">
               <h5 className="text-base font-medium text-gray-800 mb-3">Recommended Actions:</h5>
               <ul className="space-y-2">
-                {recommendations.steps.map((step, index) => (
+                {/*recommendations.steps.map((step, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium mt-0.5 flex-shrink-0">
                       {index + 1}
                     </span>
                     <span className="text-gray-700 text-sm">{step}</span>
                   </li>
-                ))}
+                ))*/}
               </ul>
             </div>
             
-            <div className="text-sm text-gray-600 mb-6">
+            {/* <div className="text-sm text-gray-600 mb-6">
               <strong>Timeline:</strong> {recommendations.timeline}
-            </div>
+            </div> */}
             
             <button 
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed text-sm"
