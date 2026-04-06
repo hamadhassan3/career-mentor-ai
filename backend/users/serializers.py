@@ -54,3 +54,8 @@ class TOTPVerifySerializer(serializers.Serializer):
 class TOTPLoginSerializer(serializers.Serializer):
     totp_token = serializers.CharField()
     code = serializers.CharField(min_length=6, max_length=6)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)

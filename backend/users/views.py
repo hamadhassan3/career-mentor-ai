@@ -19,6 +19,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     TOTPVerifySerializer,
     TOTPLoginSerializer,
+    ChangePasswordSerializer,
 )
 
 
@@ -177,6 +178,25 @@ class TOTPConfirmView(APIView):
         device.confirmed = True
         device.save()
         return Response({'detail': 'TOTP has been enabled successfully.'})
+
+
+class ChangePasswordView(APIView):
+    """Change password for the authenticated user."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if not request.user.check_password(serializer.validated_data['current_password']):
+            return Response(
+                {'detail': 'Current password is incorrect.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        request.user.set_password(serializer.validated_data['new_password'])
+        request.user.save()
+        return Response({'detail': 'Password changed successfully.'})
 
 
 class PasswordResetRequestView(APIView):

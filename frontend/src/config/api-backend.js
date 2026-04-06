@@ -53,6 +53,8 @@ export const authAPI = {
   totpSetup: () => backendClient.get('/auth/totp/setup/'),
   totpConfirm: (data) => backendClient.post('/auth/totp/confirm/', data),
   me: () => backendClient.get('/auth/me/'),
+  updateMe: (data) => backendClient.put('/auth/me/', data),
+  changePassword: (data) => backendClient.post('/auth/change-password/', data),
   passwordResetRequest: (data) => backendClient.post('/auth/password-reset/', data),
   passwordResetConfirm: (data) => backendClient.post('/auth/password-reset/confirm/', data),
 };

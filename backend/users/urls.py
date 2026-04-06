@@ -7,6 +7,7 @@ from .views import (
     TOTPLoginVerifyView,
     TOTPSetupView,
     TOTPConfirmView,
+    ChangePasswordView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
 )
@@ -20,6 +21,8 @@ urlpatterns = [
     path('totp/setup/', TOTPSetupView.as_view(), name='totp_setup'),
     path('totp/confirm/', TOTPConfirmView.as_view(), name='totp_confirm'),
     path('totp/login/', TOTPLoginVerifyView.as_view(), name='totp_login'),
+    # Password
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     # Password reset
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

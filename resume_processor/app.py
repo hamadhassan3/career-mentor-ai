@@ -246,7 +246,7 @@ def process_resume():
         resume_data = {
             'total_exp': parsed_data.get('total_exp', 0),
             'university': parsed_data.get('university', []),
-            'designition': cleaned_designations, 
+            'designition': cleaned_designations,
             'degree': parsed_data.get('degree', []),
             'skills': it_skills,  # IT skills as main skills
             'companies_worked_at': parsed_data.get('Companies worked at', []),
@@ -257,6 +257,7 @@ def process_resume():
             'soft_skill_categories': soft_categories,
             'languages': languages,
             'language_categories': lang_categories,
+            'created_at': datetime.datetime.now().isoformat(),
         }
 
         return jsonify(resume_data), 200

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { resumeAPI } from './config/api-resume-processor.js';
 import { useAuth } from './context/AuthContext';
 import ResumeUpload from './components/ResumeUpload.jsx';
@@ -12,6 +12,7 @@ import TOTPSetup from './pages/TOTPSetup.jsx';
 import TOTPVerify from './pages/TOTPVerify.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import Profile from './pages/Profile.jsx';
 
 function Spinner() {
   return (
@@ -71,10 +72,15 @@ function Dashboard() {
             <span className="font-semibold text-gray-900">Career Mentor</span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 hidden sm:block">
+          <div className="flex items-center gap-1">
+            <Link to="/profile" className="btn-ghost text-sm py-1.5 px-3 hidden sm:block">
               {user.first_name || user.username}
-            </span>
+            </Link>
+            <Link to="/profile" className="btn-ghost py-1.5 px-2 sm:hidden" aria-label="Profile">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </Link>
             <button onClick={logout} className="btn-ghost text-sm py-1.5 px-3">
               Log out
             </button>
@@ -120,6 +126,7 @@ function App() {
         path="/totp-setup"
         element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
       />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     </Routes>
   );

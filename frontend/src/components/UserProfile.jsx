@@ -198,9 +198,11 @@ const UserProfile = ({ resumeData, onUpdate }) => {
     <div className="card p-5">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
-        <span className="text-xs text-gray-400">
-          {new Date(formData.created_at).toLocaleDateString()}
-        </span>
+        {formData.created_at && (
+          <span className="text-xs text-gray-400">
+            {new Date(formData.created_at).toLocaleDateString()}
+          </span>
+        )}
       </div>
 
       <div className="space-y-5 divide-y divide-gray-100 [&>*:not(:first-child)]:pt-5">

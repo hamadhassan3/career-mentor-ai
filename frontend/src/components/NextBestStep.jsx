@@ -32,7 +32,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
     <div className="card p-5">
       <div className="mb-5">
         <h3 className="text-lg font-semibold text-gray-900">Next Best Step</h3>
-        <p className="text-xs text-gray-400 mt-0.5">AI-powered skill recommendations</p>
+        <p className="text-xs text-gray-400 mt-0.5">Skill recommendations</p>
       </div>
 
       {!recommendations ? (
