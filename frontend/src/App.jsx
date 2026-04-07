@@ -6,6 +6,8 @@ import ResumeUpload from './components/ResumeUpload.jsx';
 import UserProfile from './components/UserProfile.jsx';
 import NextBestStep from './components/NextBestStep.jsx';
 import CareerPathway from './components/CareerPathway.jsx';
+import Avatar from './components/Avatar.jsx';
+import AvatarControls from './components/AvatarControls.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import TOTPSetup from './pages/TOTPSetup.jsx';
@@ -95,13 +97,16 @@ function Dashboard() {
             <ResumeUpload onProceed={handleResumeUpload} loading={loading} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up">
-            <div className="lg:col-span-5 space-y-6">
-              <UserProfile resumeData={resumeData} onUpdate={setResumeData} />
-            </div>
-            <div className="lg:col-span-7 space-y-6">
-              <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation} />
-              <CareerPathway resumeData={resumeData} targetDesignation={targetDesignation} />
+          <div className="space-y-6 animate-fade-in-up">
+            <AvatarControls />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 space-y-6">
+                <UserProfile resumeData={resumeData} onUpdate={setResumeData} />
+              </div>
+              <div className="lg:col-span-7 space-y-6">
+                <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation} />
+                <CareerPathway resumeData={resumeData} targetDesignation={targetDesignation} />
+              </div>
             </div>
           </div>
         )}
@@ -116,19 +121,23 @@ function App() {
   if (loading) return <Spinner />;
 
   return (
-    <Routes>
-      <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
-      <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
-      <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
-      <Route path="/reset-password/:uid/:token" element={<GuestOnly><ResetPassword /></GuestOnly>} />
-      <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
-      <Route
-        path="/totp-setup"
-        element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
-      />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+        <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
+        <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+        <Route path="/reset-password/:uid/:token" element={<GuestOnly><ResetPassword /></GuestOnly>} />
+        <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
+        <Route
+          path="/totp-setup"
+          element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
+        />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      </Routes>
+      
+      {user && user.totp_confirmed && <Avatar />}
+    </>
   );
 }
 
