@@ -27,7 +27,16 @@ const Avatar = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
         <div 
-          className="w-20 h-20 rounded-full overflow-hidden shadow-2xl ring-4 ring-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-3xl group"
+          className="w-20 h-20 rounded-full overflow-hidden transition-all duration-500 hover:scale-110 hover:-translate-y-2 group transform-gpu"
+          style={{
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)';
+          }}
         >
           <img
             src={`/avatar/listening.png`}
