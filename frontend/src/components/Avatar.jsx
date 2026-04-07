@@ -27,15 +27,17 @@ const Avatar = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
         <div 
-          className="w-20 h-20 rounded-full overflow-hidden shadow-2xl ring-4 ring-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-3xl cursor-pointer group"
-          onClick={handleToggleVisibility}
-          role="button"
-          aria-label={`Avatar in ${currentState} state. Click to minimize.`}
+          className="w-20 h-20 rounded-full overflow-hidden shadow-2xl ring-4 ring-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-3xl group"
         >
+          <img
+            src={`/avatar/listening.png`}
+            alt={`Avatar listening`}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 opacity-0 group-hover:opacity-100 absolute inset-0 z-10"
+          />
           <img
             src={`/avatar/${currentState}.png`}
             alt={`Avatar ${currentState}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 group-hover:opacity-0"
           />
           
           <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -52,12 +54,13 @@ const Avatar = () => {
             currentState === 'celebrating' ? 'bg-pink-400 animate-bounce' :
             currentState === 'error' ? 'bg-red-400 animate-pulse' :
             'bg-gray-400'
-          }`} />
+          } group-hover:bg-blue-400 group-hover:animate-pulse`} />
         </div>
 
         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
           <div className="bg-black/75 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-            {currentState.charAt(0).toUpperCase() + currentState.slice(1)}
+            <span className="group-hover:hidden">{currentState.charAt(0).toUpperCase() + currentState.slice(1)}</span>
+            <span className="hidden group-hover:block">Listening</span>
           </div>
         </div>
       </div>
