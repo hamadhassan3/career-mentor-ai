@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+import Logo from '../components/Logo';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -33,11 +34,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
+          <Logo size="lg" className="mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
           <p className="text-gray-500 mt-1 text-sm">Sign in to Career Mentor</p>
         </div>

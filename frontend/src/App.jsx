@@ -7,7 +7,7 @@ import UserProfile from './components/UserProfile.jsx';
 import NextBestStep from './components/NextBestStep.jsx';
 import CareerPathway from './components/CareerPathway.jsx';
 import Avatar from './components/Avatar.jsx';
-import AvatarControls from './components/AvatarControls.jsx';
+import Logo from './components/Logo.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import TOTPSetup from './pages/TOTPSetup.jsx';
@@ -65,13 +65,9 @@ function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">Career Mentor</span>
+          <div className="flex items-center gap-3">
+            <Logo size="header" />
+            <span className="text-xl font-bold text-gray-900 tracking-tight">Career Mentor</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -98,7 +94,6 @@ function Dashboard() {
           </div>
         ) : (
           <div className="space-y-6 animate-fade-in-up">
-            <AvatarControls />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-5 space-y-6">
                 <UserProfile resumeData={resumeData} onUpdate={setResumeData} />

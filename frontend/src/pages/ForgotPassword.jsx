@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../config/api-backend';
+import Logo from '../components/Logo';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -26,11 +27,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
+          <Logo size="lg" className="mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">Reset password</h1>
           <p className="text-gray-500 mt-1 text-sm">We'll send you a reset link</p>
         </div>

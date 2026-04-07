@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { authAPI } from '../config/api-backend';
 import PasswordInput from '../components/PasswordInput';
+import Logo from '../components/Logo';
 
 export default function ResetPassword() {
   const { uid, token } = useParams();
@@ -35,11 +36,7 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
-          </div>
+          <Logo size="lg" className="mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">New password</h1>
           <p className="text-gray-500 mt-1 text-sm">Choose a strong password</p>
         </div>
