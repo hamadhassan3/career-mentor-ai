@@ -41,7 +41,9 @@ const Avatar = () => {
 
   if (isExpanded) {
     return (
-      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ${getStateAnimation()}`}>
+      <div 
+        className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ${getStateAnimation()}`}
+      >
         <div className="relative bg-white rounded-3xl shadow-2xl min-w-[240px] max-w-[320px] min-h-[280px] border border-gray-100 backdrop-blur-sm overflow-hidden">
           <img
             src={`/avatar/${currentState}.png`}
@@ -83,7 +85,9 @@ const Avatar = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div 
+      className="fixed bottom-6 right-6 z-50"
+    >
       <div className="relative">
         <div 
           className="w-20 h-20 rounded-full overflow-hidden transition-all duration-500 hover:scale-110 hover:-translate-y-2 group transform-gpu"

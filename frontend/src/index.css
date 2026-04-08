@@ -11,18 +11,19 @@
     @apply bg-indigo-100 text-indigo-900;
   }
 
-  /* Smooth scrollbar */
+  /* Hide scrollbar completely while maintaining scroll functionality */
   ::-webkit-scrollbar {
-    @apply w-1.5;
+    display: none;
   }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+  
+  /* For Firefox */
+  html {
+    scrollbar-width: none;
   }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+  
+  /* For Internet Explorer and Edge */
+  body {
+    -ms-overflow-style: none;
   }
 }
 

@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../config/api-backend';
 import PasswordInput from '../components/PasswordInput';
-import Logo from '../components/Logo';
+import Header from '../components/Header';
 
 export default function Profile() {
-  const { user, refreshUser, logout } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
     first_name: user.first_name || '',
     last_name: user.last_name || '',
-    email: user.email || '',
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
@@ -77,19 +75,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <Logo size="header" />
-            <span className="text-xl font-bold text-gray-900 tracking-tight">{process.env.REACT_APP_NAME}</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link to="/" className="btn-ghost text-sm py-1.5 px-3">Dashboard</Link>
-            <button onClick={logout} className="btn-ghost text-sm py-1.5 px-3">Log out</button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Content */}
       <main className="flex-1 max-w-lg w-full mx-auto px-4 sm:px-6 py-8 space-y-6 animate-fade-in-up">
@@ -139,13 +125,7 @@ export default function Profile() {
 
           <div>
             <label htmlFor="email" className="label">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="input"
-            />
+            <div className="input bg-gray-100 text-gray-500 cursor-not-allowed">{user.email}</div>
           </div>
 
           <button type="submit" disabled={profileSaving} className="btn-primary text-sm">
