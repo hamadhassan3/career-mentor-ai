@@ -23,6 +23,65 @@ const Avatar = () => {
     );
   }
 
+  const isExpanded = currentState !== 'idle' && currentState !== 'listening';
+  
+  const getStateAnimation = () => {
+    switch (currentState) {
+      case 'celebrating':
+        return 'animate-bounce';
+      case 'thinking':
+      case 'analyzing':
+        return 'animate-pulse';
+      case 'error':
+        return 'animate-shake';
+      default:
+        return '';
+    }
+  };
+
+  if (isExpanded) {
+    return (
+      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ${getStateAnimation()}`}>
+        <div className="relative bg-white rounded-3xl shadow-2xl min-w-[240px] max-w-[320px] min-h-[280px] border border-gray-100 backdrop-blur-sm overflow-hidden">
+          <img
+            src={`/avatar/${currentState}.png`}
+            alt={`Avatar ${currentState}`}
+            className={`w-full h-full object-cover ${getStateAnimation()}`}
+          />
+          
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+            <div className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium backdrop-blur-sm ${
+              currentState === 'thinking' ? 'bg-blue-500/90 text-white' :
+              currentState === 'analyzing' ? 'bg-purple-500/90 text-white' :
+              currentState === 'presenting' ? 'bg-indigo-500/90 text-white' :
+              currentState === 'encouraging' ? 'bg-green-500/90 text-white' :
+              currentState === 'celebrating' ? 'bg-pink-500/90 text-white' :
+              currentState === 'error' ? 'bg-red-500/90 text-white' :
+              'bg-gray-500/90 text-white'
+            }`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${
+                currentState === 'thinking' ? 'bg-white animate-pulse' :
+                currentState === 'analyzing' ? 'bg-white animate-pulse' :
+                currentState === 'presenting' ? 'bg-white' :
+                currentState === 'encouraging' ? 'bg-white' :
+                currentState === 'celebrating' ? 'bg-white animate-bounce' :
+                currentState === 'error' ? 'bg-white animate-pulse' :
+                'bg-white'
+              }`} />
+              {currentState === 'thinking' ? 'Processing your resume...' :
+               currentState === 'analyzing' ? 'Analyzing your profile...' :
+               currentState === 'presenting' ? 'Preparing insights...' :
+               currentState === 'encouraging' ? 'Great work!' :
+               currentState === 'celebrating' ? 'Success!' :
+               currentState === 'error' ? 'Something went wrong' :
+               'Working...'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
@@ -56,13 +115,7 @@ const Avatar = () => {
           <div className={`w-4 h-4 rounded-full border-2 border-white shadow-lg transition-colors duration-300 ${
             currentState === 'idle' ? 'bg-green-400' :
             currentState === 'listening' ? 'bg-blue-400 animate-pulse' :
-            currentState === 'thinking' ? 'bg-yellow-400 animate-pulse' :
-            currentState === 'analyzing' ? 'bg-purple-400 animate-pulse' :
-            currentState === 'presenting' ? 'bg-indigo-400' :
-            currentState === 'encouraging' ? 'bg-green-500' :
-            currentState === 'celebrating' ? 'bg-pink-400 animate-bounce' :
-            currentState === 'error' ? 'bg-red-400 animate-pulse' :
-            'bg-gray-400'
+            'bg-blue-400'
           } group-hover:bg-blue-400 group-hover:animate-pulse`} />
         </div>
 

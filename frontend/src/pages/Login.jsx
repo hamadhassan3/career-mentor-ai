@@ -36,7 +36,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <Logo size="lg" className="mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 mt-1 text-sm">Sign in to Career Mentor</p>
+          <p className="text-gray-500 mt-1 text-sm">Sign in to {process.env.REACT_APP_NAME}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">

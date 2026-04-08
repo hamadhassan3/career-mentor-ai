@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../config/api-backend';
 import PasswordInput from '../components/PasswordInput';
+import Logo from '../components/Logo';
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();
@@ -79,16 +80,10 @@ export default function Profile() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <span className="font-semibold text-gray-900">Career Mentor</span>
-            </Link>
-          </div>
+          <Link to="/" className="flex items-center gap-3">
+            <Logo size="header" />
+            <span className="text-xl font-bold text-gray-900 tracking-tight">{process.env.REACT_APP_NAME}</span>
+          </Link>
           <div className="flex items-center gap-3">
             <Link to="/" className="btn-ghost text-sm py-1.5 px-3">Dashboard</Link>
             <button onClick={logout} className="btn-ghost text-sm py-1.5 px-3">Log out</button>

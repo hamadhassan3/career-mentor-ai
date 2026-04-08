@@ -12,8 +12,8 @@ const Logo = ({ size = 'md', className = '', rounded = true }) => {
   return (
     <div className={`inline-flex items-center justify-center overflow-hidden ${roundedClass} ${sizeClasses[size]} ${className}`}>
       <img 
-        src="/avatar/logo.png" 
-        alt="Career Mentor" 
+        src="/logo.png" 
+        alt={process.env.REACT_APP_NAME} 
         className="w-full h-full object-contain"
       />
     </div>

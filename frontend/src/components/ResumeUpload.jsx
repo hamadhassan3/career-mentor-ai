@@ -1,9 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useDispatch } from 'react-redux';
 import SearchableDropdown from "./SearchableDropdown";
 import { resumeAPI } from "../config/api-resume-processor";
+import { setState } from '../store/avatarSlice';
 
 const ResumeUpload = ({ loading, onProceed }) => {
   const fileInputRef = useRef(null);
+  const dispatch = useDispatch();
   const [resume, setResume] = useState(null);
   const [designation, setDesignation] = useState("");
   const [designations, setDesignations] = useState([]);

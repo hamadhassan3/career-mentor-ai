@@ -55,7 +55,7 @@ export default function Signup() {
         <div className="text-center mb-8">
           <Logo size="lg" className="mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
-          <p className="text-gray-500 mt-1 text-sm">Get started with Career Mentor</p>
+          <p className="text-gray-500 mt-1 text-sm">Get started with {process.env.REACT_APP_NAME}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">

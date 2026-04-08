@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { resumeAPI } from './config/api-resume-processor.js';
 import { useAuth } from './context/AuthContext';
+import { setState } from './store/avatarSlice';
 import ResumeUpload from './components/ResumeUpload.jsx';
 import UserProfile from './components/UserProfile.jsx';
 import NextBestStep from './components/NextBestStep.jsx';
@@ -43,18 +45,23 @@ function Dashboard() {
   const [targetDesignation, setTargetDesignation] = useState(null);
   const [loading, setLoading] = useState(false);
   const { user, logout } = useAuth();
+  const dispatch = useDispatch();
 
   const handleResumeUpload = async (file, designation) => {
     setLoading(true);
+    dispatch(setState('thinking'));
     try {
       const formData = new FormData();
       formData.append('file', file);
       const response = await resumeAPI.uploadResume(formData);
       setResumeData(response.data);
       setTargetDesignation(designation);
+      dispatch(setState('idle'));
     } catch (error) {
       console.error('Upload error:', error);
+      dispatch(setState('error'));
       alert('Failed to upload resume. Please try again.');
+      setTimeout(() => dispatch(setState('idle')), 3000);
     } finally {
       setLoading(false);
     }
@@ -67,7 +74,7 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="header" />
-            <span className="text-xl font-bold text-gray-900 tracking-tight">Career Mentor</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">{process.env.REACT_APP_NAME}</span>
           </div>
 
           <div className="flex items-center gap-1">

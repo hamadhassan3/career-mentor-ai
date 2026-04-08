@@ -1,3 +1,4 @@
+import os
 import pyotp
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -143,7 +144,7 @@ class TOTPSetupView(APIView):
         totp = pyotp.TOTP(device.secret)
         provisioning_uri = totp.provisioning_uri(
             name=request.user.email or request.user.username,
-            issuer_name='Career Mentor',
+            issuer_name=os.getenv('APP_NAME', 'Career Mentor'),
         )
 
         return Response({
@@ -216,7 +217,7 @@ class PasswordResetRequestView(APIView):
             reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
             send_mail(
-                subject='Career Mentor - Password Reset',
+                subject=f'{os.getenv("APP_NAME", "Career Mentor")} - Password Reset',
                 message=f'Click the link to reset your password: {reset_url}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
