@@ -1,81 +1,26 @@
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.models import User
 
 
 class Resume(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes')
+    title = models.CharField(max_length=255, blank=True, null=True)
+    target_designation = models.CharField(max_length=255, blank=True, null=True)
+    original_filename = models.CharField(max_length=255, blank=True, null=True)
     total_exp = models.IntegerField(default=0)
     
-    university = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    designition = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    degree = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    skills = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    companies_worked_at = ArrayField(
-        models.TextField(),
-        blank=True,
-        default=list
-    )
-    
-    skills_original = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    it_skills = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    it_skill_categories = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    soft_skills = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    soft_skill_categories = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    languages = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
-    
-    language_categories = ArrayField(
-        models.CharField(max_length=255),
-        blank=True,
-        default=list
-    )
+    university = models.JSONField(default=list, blank=True)
+    designition = models.JSONField(default=list, blank=True)
+    degree = models.JSONField(default=list, blank=True)
+    skills = models.JSONField(default=list, blank=True)
+    companies_worked_at = models.JSONField(default=list, blank=True)
+    skills_original = models.JSONField(default=list, blank=True)
+    it_skills = models.JSONField(default=list, blank=True)
+    it_skill_categories = models.JSONField(default=list, blank=True)
+    soft_skills = models.JSONField(default=list, blank=True)
+    soft_skill_categories = models.JSONField(default=list, blank=True)
+    languages = models.JSONField(default=list, blank=True)
+    language_categories = models.JSONField(default=list, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -85,4 +30,4 @@ class Resume(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Resume - {self.id}"
+        return f"{self.user.username} - {self.title or self.original_filename or f'Resume {self.id}'}"

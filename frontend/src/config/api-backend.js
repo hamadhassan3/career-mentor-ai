@@ -59,4 +59,13 @@ export const authAPI = {
   passwordResetConfirm: (data) => backendClient.post('/auth/password-reset/confirm/', data),
 };
 
+export const resumeAPI = {
+  getResumes: () => backendClient.get('/resumes/'),
+  getResume: (id) => backendClient.get(`/resumes/${id}/`),
+  createResume: (data) => backendClient.post('/resumes/upload/', data),
+  updateResume: (id, data) => backendClient.put(`/resumes/${id}/`, data),
+  deleteResume: (id) => backendClient.delete(`/resumes/${id}/`),
+  getLatestResume: () => backendClient.get('/resumes/latest/'),
+};
+
 export default backendClient;
