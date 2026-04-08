@@ -75,7 +75,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header showTabs={false} />
 
       {/* Content */}
       <main className="flex-1 max-w-lg w-full mx-auto px-4 sm:px-6 py-8 space-y-6 animate-fade-in-up">
