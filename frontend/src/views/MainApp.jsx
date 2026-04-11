@@ -1,23 +1,29 @@
 import { useState } from 'react';
-import Header from '../components/Header.jsx';
 import Dashboard from '../components/Dashboard.jsx';
 import ResumeHistory from '../components/ResumeHistory.jsx';
 
-export default function MainApp() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+export default function MainApp({ activeTab, onTabChange }) {
+  const [shouldShowUpload, setShouldShowUpload] = useState(false);
 
   const handleResumeSelect = () => {
-    setActiveTab('dashboard');
+    setShouldShowUpload(false);
+    onTabChange('dashboard');
   };
 
   const handleUploadNew = () => {
-    setActiveTab('dashboard');
+    setShouldShowUpload(true);
+    onTabChange('dashboard');
+  };
+
+  const handleBackToHistory = () => {
+    setShouldShowUpload(false);
+    onTabChange('history');
   };
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} />;
       case 'history':
         return (
           <div className="flex justify-center items-start min-h-[65vh] animate-fade-in">
@@ -32,14 +38,12 @@ export default function MainApp() {
       case 'events':
         return <div className="text-center py-12 text-gray-500">Events tab coming soon...</div>;
       default:
-        return <Dashboard />;
+        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} />;
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
-
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 md:py-8">
         {renderActiveTab()}

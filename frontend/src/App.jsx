@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import Avatar from './components/Avatar.jsx';
+import Header from './components/Header.jsx';
 import MainApp from './views/MainApp.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
@@ -35,11 +37,32 @@ function GuestOnly({ children }) {
 
 function App() {
   const { user, loading, pendingTotp } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   if (loading) return <Spinner />;
 
+  const isProtectedRoute = location.pathname === '/' || location.pathname === '/profile';
+  const showHeader = user && user.totp_confirmed && isProtectedRoute;
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (location.pathname === '/profile') {
+      navigate('/');
+    }
+  };
+
   return (
     <>
+      {showHeader && (
+        <Header 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange}
+          showTabs={true}
+        />
+      )}
+      
       <Routes>
         <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
@@ -51,7 +74,7 @@ function App() {
           element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
         />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/" element={<ProtectedRoute><MainApp /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><MainApp activeTab={activeTab} onTabChange={handleTabChange} /></ProtectedRoute>} />
       </Routes>
       
       {user && user.totp_confirmed && <Avatar />}

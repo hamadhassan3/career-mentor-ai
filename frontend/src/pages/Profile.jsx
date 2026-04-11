@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../config/api-backend';
 import PasswordInput from '../components/PasswordInput';
-import Header from '../components/Header';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -75,8 +74,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header showTabs={false} />
-
       {/* Content */}
       <main className="flex-1 max-w-lg w-full mx-auto px-4 sm:px-6 py-8 space-y-6 animate-fade-in-up">
         <div>

@@ -9,17 +9,21 @@ import UserProfile from './UserProfile.jsx';
 import NextBestStep from './NextBestStep.jsx';
 import CareerPathway from './CareerPathway.jsx';
 
-export default function Dashboard() {
+export default function Dashboard({ shouldShowUpload = false, onUploadStateChange, onBackToHistory }) {
   const [resumeData, setResumeData] = useState(null);
   const [targetDesignation, setTargetDesignation] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showUpload, setShowUpload] = useState(shouldShowUpload);
   const [hasResumes, setHasResumes] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     checkForExistingResumes();
   }, []);
+
+  useEffect(() => {
+    setShowUpload(shouldShowUpload);
+  }, [shouldShowUpload]);
 
   const checkForExistingResumes = async () => {
     try {
@@ -54,6 +58,7 @@ export default function Dashboard() {
       setResumeData(resumeDataWithMetadata);
       setTargetDesignation(designation);
       setShowUpload(false);
+      onUploadStateChange?.(false);
       setHasResumes(true);
       dispatch(setState('idle'));
     } catch (error) {
@@ -73,10 +78,13 @@ export default function Dashboard() {
 
   const handleUploadNew = () => {
     setShowUpload(true);
+    onUploadStateChange?.(true);
   };
 
   const handleBackToHistory = () => {
     setShowUpload(false);
+    onUploadStateChange?.(false);
+    onBackToHistory?.();
   };
 
   return (
