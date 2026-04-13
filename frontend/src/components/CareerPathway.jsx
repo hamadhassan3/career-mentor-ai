@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
+import { setPresenting, setIdle } from '../store/avatarSlice';
 
 const CareerPathway = ({ resumeData, targetDesignation }) => {
+  const dispatch = useDispatch();
   const [pathway, setPathway] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -12,6 +15,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
 
   const generatePathway = async () => {
     setLoading(true);
+    dispatch(setPresenting('Building career roadmap...'));
     try {
       // Use the old /predict API to get meaningful recommendations
       const response = await resumeAPI.predictNextSkills({
@@ -108,6 +112,8 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         stages,
         timelineTotal: stages.length > 2 ? "2-3 years" : stages.length > 1 ? "1-2 years" : "6-12 months"
       });
+      dispatch(setPresenting('Career roadmap ready!'));
+      setTimeout(() => dispatch(setIdle()), 2000);
     } catch (error) {
       console.error('Failed to generate pathway:', error);
       // Fallback pathway on error
@@ -132,6 +138,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         ],
         timelineTotal: "1-2 years"
       });
+      dispatch(setIdle());
     } finally {
       setLoading(false);
     }

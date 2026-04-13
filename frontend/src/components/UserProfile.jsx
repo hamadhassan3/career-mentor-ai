@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
+import { setWarning, clearWarning, setEncouraging, setIdle } from '../store/avatarSlice';
 
 const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
+  const dispatch = useDispatch();
   const [editMode, setEditMode] = useState({});
   const [formData, setFormData] = useState(resumeData);
   const [allSkills, setAllSkills] = useState({});
@@ -10,6 +13,7 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
   const [saving, setSaving] = useState(false);
   const [designations, setDesignations] = useState([]);
   const [designationsLoading, setDesignationsLoading] = useState(false);
+  const [pendingDesignationSave, setPendingDesignationSave] = useState(false);
 
   useEffect(() => {
     const fetchAllSkills = async () => {
@@ -53,6 +57,44 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
   const handleSave = async (field) => {
     if (isReadOnly) return;
     
+    // Check if this is a target designation change and show warning
+    if (field === 'target_designation' && formData.target_designation !== resumeData.target_designation && !pendingDesignationSave) {
+      setPendingDesignationSave(true);
+      dispatch(setWarning({
+        message: "Changing role will clear recommendations. Continue?",
+        onConfirm: () => {
+          dispatch(clearWarning());
+          setPendingDesignationSave(false);
+          performSave(field);
+        },
+        onCancel: () => {
+          dispatch(clearWarning());
+          setPendingDesignationSave(false);
+          // Reset form data to original value
+          setFormData({ ...formData, target_designation: resumeData.target_designation });
+        }
+      }));
+      return;
+    }
+    
+    performSave(field);
+  };
+
+  const getSuccessMessage = (field) => {
+    const fieldMessages = {
+      'target_designation': 'Target role updated successfully!',
+      'total_exp': 'Experience updated successfully!',
+      'university': 'Education updated successfully!',
+      'designition': 'Roles updated successfully!',
+      'degree': 'Degrees updated successfully!',
+      'it_skills': 'IT skills updated successfully!',
+      'soft_skills': 'Soft skills updated successfully!',
+      'languages': 'Languages updated successfully!'
+    };
+    return fieldMessages[field] || 'Profile updated successfully!';
+  };
+
+  const performSave = async (field) => {
     setSaving(true);
     try {
       // Update the resume in the backend
@@ -61,6 +103,10 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
       // Update local state
       setEditMode({ ...editMode, [field]: false });
       onUpdate(response.data);
+      
+      // Show encouraging message for successful update
+      dispatch(setEncouraging(getSuccessMessage(field)));
+      setTimeout(() => dispatch(setIdle()), 3000);
     } catch (error) {
       console.error('Failed to update resume:', error);
       const errorMessage = error.response?.data?.error || 'Failed to save changes. Please try again.';

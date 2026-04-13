@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
+import { setPresenting, setIdle } from '../store/avatarSlice';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
+  const dispatch = useDispatch();
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -12,6 +15,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
 
   const generateRecommendations = async () => {
     setLoading(true);
+    dispatch(setPresenting('Generating skill recommendations...'));
     try {
       const response = await resumeAPI.predictNextSingleSkill({
         itSkills: resumeData.it_skills,
@@ -30,15 +34,19 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
           skills: topSkills.map(skill => skill.skill),
           impact: bestSkill.confidence > 0.7 ? 'High' : bestSkill.confidence > 0.4 ? 'Medium' : 'Low',
         });
+        dispatch(setPresenting('Skill recommendations ready!'));
+        setTimeout(() => dispatch(setIdle()), 2000);
       } else {
         setRecommendations({
           title: 'No recommendations available',
           skills: [],
           impact: 'Low',
         });
+        dispatch(setIdle());
       }
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
+      dispatch(setIdle());
     } finally {
       setLoading(false);
     }
