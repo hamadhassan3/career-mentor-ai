@@ -82,16 +82,16 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
 
   const getSuccessMessage = (field) => {
     const fieldMessages = {
-      'target_designation': 'Target role updated successfully!',
-      'total_exp': 'Experience updated successfully!',
-      'university': 'Education updated successfully!',
-      'designition': 'Roles updated successfully!',
-      'degree': 'Degrees updated successfully!',
-      'it_skills': 'IT skills updated successfully!',
-      'soft_skills': 'Soft skills updated successfully!',
-      'languages': 'Languages updated successfully!'
+      'target_designation': 'Fawkes updated your target role!',
+      'total_exp': 'Fawkes updated your experience!',
+      'university': 'Fawkes updated your education!',
+      'designition': 'Fawkes updated your roles!',
+      'degree': 'Fawkes updated your degrees!',
+      'it_skills': 'Fawkes updated your IT skills!',
+      'soft_skills': 'Fawkes updated your soft skills!',
+      'languages': 'Fawkes updated your languages!'
     };
-    return fieldMessages[field] || 'Profile updated successfully!';
+    return fieldMessages[field] || 'Fawkes updated your profile!';
   };
 
   const performSave = async (field) => {

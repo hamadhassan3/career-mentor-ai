@@ -15,7 +15,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
 
   const generatePathway = async () => {
     setLoading(true);
-    dispatch(setPresenting('Building career roadmap...'));
+    dispatch(setPresenting('Fawkes is building your career roadmap...'));
     try {
       // Use the old /predict API to get meaningful recommendations
       const response = await resumeAPI.predictNextSkills({
@@ -112,7 +112,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         stages,
         timelineTotal: stages.length > 2 ? "2-3 years" : stages.length > 1 ? "1-2 years" : "6-12 months"
       });
-      dispatch(setPresenting('Career roadmap ready!'));
+      dispatch(setPresenting('Fawkes has your career roadmap ready!'));
       setTimeout(() => dispatch(setIdle()), 2000);
     } catch (error) {
       console.error('Failed to generate pathway:', error);

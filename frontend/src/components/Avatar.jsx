@@ -104,13 +104,13 @@ const Avatar = () => {
                   currentState === 'error' ? 'bg-white animate-pulse' :
                   'bg-white'
                 }`} />
-                {currentState === 'thinking' ? 'Processing your resume...' :
-                 currentState === 'analyzing' ? 'Analyzing your profile...' :
-                 currentState === 'presenting' ? (presentingMessage || 'Preparing insights...') :
-                 currentState === 'encouraging' ? (encouragingMessage || 'Great work!') :
-                 currentState === 'celebrating' ? 'Success!' :
-                 currentState === 'error' ? 'Something went wrong' :
-                 'Working...'}
+                {currentState === 'thinking' ? 'Fawkes is processing your resume...' :
+                 currentState === 'analyzing' ? 'Fawkes is analyzing your profile...' :
+                 currentState === 'presenting' ? (presentingMessage || 'Fawkes is preparing insights...') :
+                 currentState === 'encouraging' ? (encouragingMessage || 'Great work! - Fawkes') :
+                 currentState === 'celebrating' ? 'Fawkes celebrates your success!' :
+                 currentState === 'error' ? 'Fawkes encountered an issue' :
+                 'Fawkes is working...'}
               </div>
             </div>
           )}

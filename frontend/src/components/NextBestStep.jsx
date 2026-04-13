@@ -15,7 +15,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
 
   const generateRecommendations = async () => {
     setLoading(true);
-    dispatch(setPresenting('Generating skill recommendations...'));
+    dispatch(setPresenting('Fawkes is generating skill recommendations...'));
     try {
       const response = await resumeAPI.predictNextSingleSkill({
         itSkills: resumeData.it_skills,
@@ -34,7 +34,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
           skills: topSkills.map(skill => skill.skill),
           impact: bestSkill.confidence > 0.7 ? 'High' : bestSkill.confidence > 0.4 ? 'Medium' : 'Low',
         });
-        dispatch(setPresenting('Skill recommendations ready!'));
+        dispatch(setPresenting('Fawkes has your skill recommendations ready!'));
         setTimeout(() => dispatch(setIdle()), 2000);
       } else {
         setRecommendations({
