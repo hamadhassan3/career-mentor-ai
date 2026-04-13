@@ -22,12 +22,21 @@ class Resume(models.Model):
     languages = models.JSONField(default=list, blank=True)
     language_categories = models.JSONField(default=list, blank=True)
     
+    is_active = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'resumes'
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'is_active'],
+                condition=models.Q(is_active=True),
+                name='one_active_resume_per_user'
+            )
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.title or self.original_filename or f'Resume {self.id}'}"

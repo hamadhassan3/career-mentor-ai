@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { resumeAPI } from '../config/api-resume-processor';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Clear recommendations when target designation changes
+  useEffect(() => {
+    setRecommendations(null);
+  }, [targetDesignation]);
 
   const generateRecommendations = async () => {
     setLoading(true);

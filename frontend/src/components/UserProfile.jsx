@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { resumeAPI } from '../config/api-resume-processor';
+import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 
-const UserProfile = ({ resumeData, onUpdate }) => {
+const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
   const [editMode, setEditMode] = useState({});
   const [formData, setFormData] = useState(resumeData);
   const [allSkills, setAllSkills] = useState({});
   const [skillsLoading, setSkillsLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [designations, setDesignations] = useState([]);
+  const [designationsLoading, setDesignationsLoading] = useState(false);
 
   useEffect(() => {
     const fetchAllSkills = async () => {
@@ -19,11 +23,53 @@ const UserProfile = ({ resumeData, onUpdate }) => {
         setSkillsLoading(false);
       }
     };
+
+    const fetchDesignations = async () => {
+      setDesignationsLoading(true);
+      try {
+        const response = await resumeAPI.getDesignations();
+        const data = response.data?.designations || response.data?.data || response.data || [];
+        setDesignations(data);
+      } catch (error) {
+        console.error('Failed to fetch designations:', error);
+      } finally {
+        setDesignationsLoading(false);
+      }
+    };
+
     fetchAllSkills();
+    fetchDesignations();
   }, []);
 
-  const handleEdit = (field) => setEditMode({ ...editMode, [field]: true });
-  const handleSave = (field) => { setEditMode({ ...editMode, [field]: false }); onUpdate(formData); };
+  useEffect(() => {
+    setFormData(resumeData);
+  }, [resumeData]);
+
+  const handleEdit = (field) => {
+    if (isReadOnly) return;
+    setEditMode({ ...editMode, [field]: true });
+  };
+
+  const handleSave = async (field) => {
+    if (isReadOnly) return;
+    
+    setSaving(true);
+    try {
+      // Update the resume in the backend
+      const response = await backendResumeAPI.updateResume(resumeData.id, formData);
+      
+      // Update local state
+      setEditMode({ ...editMode, [field]: false });
+      onUpdate(response.data);
+    } catch (error) {
+      console.error('Failed to update resume:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to save changes. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleChange = (field, value) => setFormData({ ...formData, [field]: value });
 
   const handleArrayChange = (field, index, value) => {
@@ -61,7 +107,7 @@ const UserProfile = ({ resumeData, onUpdate }) => {
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-500">{label}</span>
-          {!isEditing && (
+          {!isEditing && !isReadOnly && (
             <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
               Edit
             </button>
@@ -74,8 +120,15 @@ const UserProfile = ({ resumeData, onUpdate }) => {
               value={value}
               onChange={(e) => handleChange(field, e.target.value)}
               className="input flex-1"
+              disabled={saving}
             />
-            <button onClick={() => handleSave(field)} className="btn-primary text-sm py-2 px-4">Save</button>
+            <button 
+              onClick={() => handleSave(field)} 
+              disabled={saving}
+              className="btn-primary text-sm py-2 px-4 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
           </div>
         ) : (
           <p className="text-gray-900 text-sm">{value}</p>
@@ -101,10 +154,18 @@ const UserProfile = ({ resumeData, onUpdate }) => {
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-500">{label}</span>
-          {!isEditing ? (
-            <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
-          ) : (
-            <button onClick={() => handleSave(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Done</button>
+          {!isReadOnly && (
+            !isEditing ? (
+              <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
+            ) : (
+              <button 
+                onClick={() => handleSave(field)} 
+                disabled={saving}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Done'}
+              </button>
+            )
           )}
         </div>
         {isEditing ? (
@@ -134,10 +195,18 @@ const UserProfile = ({ resumeData, onUpdate }) => {
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-500">{label}</span>
-          {!isEditing ? (
-            <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
-          ) : (
-            <button onClick={() => handleSave(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Done</button>
+          {!isReadOnly && (
+            !isEditing ? (
+              <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
+            ) : (
+              <button 
+                onClick={() => handleSave(field)} 
+                disabled={saving}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Done'}
+              </button>
+            )
           )}
         </div>
         {isEditing ? (
@@ -194,25 +263,134 @@ const UserProfile = ({ resumeData, onUpdate }) => {
     );
   };
 
+  const renderTargetDesignation = (label, field, value) => {
+    const isEditing = editMode[field];
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-500">{label}</span>
+          {!isReadOnly && (
+            !isEditing ? (
+              <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
+            ) : (
+              <button 
+                onClick={() => handleSave(field)} 
+                disabled={saving}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Done'}
+              </button>
+            )
+          )}
+        </div>
+        {isEditing ? (
+          <div className="space-y-2 animate-fade-in">
+            {designationsLoading ? (
+              <div className="input flex items-center text-gray-400 text-sm">
+                <svg className="animate-spin h-4 w-4 mr-2 text-gray-300" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Loading roles...
+              </div>
+            ) : (
+              <select
+                value={value || ''}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className="input text-sm"
+                disabled={saving}
+              >
+                <option value="">Select target role...</option>
+                {designations.map((designation, index) => (
+                  <option key={index} value={designation}>{designation}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-900 text-sm">{value || 'No target role set'}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="card p-5">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
-        {formData.created_at && (
-          <span className="text-xs text-gray-400">
-            {new Date(formData.created_at).toLocaleDateString()}
-          </span>
+    <div className="space-y-6">
+      {/* Target Role */}
+      <div className="card p-5 border-2 border-blue-500">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-medium text-gray-900">Target Role</h3>
+          {!isReadOnly && !editMode.target_designation && (
+            <button 
+              onClick={() => handleEdit('target_designation')} 
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        
+        {editMode.target_designation ? (
+          <div className="space-y-3">
+            <select
+              value={formData.target_designation || ''}
+              onChange={(e) => handleChange('target_designation', e.target.value)}
+              className="input w-full"
+              disabled={saving}
+            >
+              <option value="">Select target role...</option>
+              {designations.map((designation, index) => (
+                <option key={index} value={designation}>{designation}</option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleSave('target_designation')} 
+                disabled={saving}
+                className="btn-primary text-sm py-2 px-4 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button 
+                onClick={() => setEditMode({ ...editMode, target_designation: false })}
+                disabled={saving}
+                className="btn-secondary text-sm py-2 px-4"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            {formData.target_designation ? (
+              <p className="text-lg font-medium text-gray-900">{formData.target_designation}</p>
+            ) : (
+              <p className="text-gray-500 text-sm">No target role set</p>
+            )}
+          </div>
         )}
       </div>
 
-      <div className="space-y-5 divide-y divide-gray-100 [&>*:not(:first-child)]:pt-5">
-        {renderEditableField('Experience', 'total_exp', `${formData.total_exp} years`)}
-        {renderEditableArray('Education', 'university', formData.university || [])}
-        {renderEditableArray('Roles', 'designition', formData.designition || [])}
-        {renderEditableArray('Degrees', 'degree', formData.degree || [])}
-        {renderSkillsArray('IT Skills', 'it_skills', formData.it_skills || [], 'it_skills')}
-        {renderSkillsArray('Soft Skills', 'soft_skills', formData.soft_skills || [], 'soft_skills')}
-        {renderSkillsArray('Languages', 'languages', formData.languages || [], 'languages')}
+      {/* Profile Details */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Profile Details</h2>
+          {formData.created_at && (
+            <span className="text-xs text-gray-400">
+              {new Date(formData.created_at).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+
+        <div className="space-y-5 divide-y divide-gray-100 [&>*:not(:first-child)]:pt-5">
+          {renderEditableField('Experience', 'total_exp', `${formData.total_exp} years`)}
+          {renderEditableArray('Education', 'university', formData.university || [])}
+          {renderEditableArray('Roles', 'designition', formData.designition || [])}
+          {renderEditableArray('Degrees', 'degree', formData.degree || [])}
+          {renderSkillsArray('IT Skills', 'it_skills', formData.it_skills || [], 'it_skills')}
+          {renderSkillsArray('Soft Skills', 'soft_skills', formData.soft_skills || [], 'soft_skills')}
+          {renderSkillsArray('Languages', 'languages', formData.languages || [], 'languages')}
+        </div>
       </div>
     </div>
   );

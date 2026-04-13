@@ -66,6 +66,8 @@ export const resumeAPI = {
   updateResume: (id, data) => backendClient.put(`/resumes/${id}/`, data),
   deleteResume: (id) => backendClient.delete(`/resumes/${id}/`),
   getLatestResume: () => backendClient.get('/resumes/latest/'),
+  getActiveResume: () => backendClient.get('/resumes/active/'),
+  activateResume: (id) => backendClient.post(`/resumes/${id}/activate/`),
 };
 
 export default backendClient;

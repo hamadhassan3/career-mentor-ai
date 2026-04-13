@@ -9,7 +9,7 @@ from pathlib import Path
 # Import utilities from scripts folder
 from scripts.extract_resume import safe_parse_resume_from_file
 from scripts.clean_skills_new import clean_skills, load_technology_skills, load_soft_skills, load_language_skills
-from scripts.clean_designations_new import clean_designations, load_occupation_titles
+from scripts.clean_designations_new import clean_designations, load_ml_trained_designations
 from scripts.extract_occupations_new import get_matching_occupations
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
@@ -39,7 +39,7 @@ except Exception as e:
     logging.error(f"Could not load technology skills: {e}")
 
 try:
-    all_occupations, _ = load_occupation_titles(DATA_DIR)
+    all_occupations, _ = load_ml_trained_designations(DATA_DIR)
     designations = sorted(list(set([occ['standardized_name'] for occ in _.values()])))
 except Exception as e:
     designations = []

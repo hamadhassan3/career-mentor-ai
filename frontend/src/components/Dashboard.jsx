@@ -27,14 +27,24 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
 
   const checkForExistingResumes = async () => {
     try {
-      const response = await resumeAPI.getLatestResume();
+      const response = await resumeAPI.getActiveResume();
       if (response.data) {
         setResumeData(response.data);
         setTargetDesignation(response.data.target_designation);
         setHasResumes(true);
       }
     } catch (error) {
-      setHasResumes(false);
+      // Fallback to latest resume if no active resume found
+      try {
+        const fallbackResponse = await resumeAPI.getLatestResume();
+        if (fallbackResponse.data) {
+          setResumeData(fallbackResponse.data);
+          setTargetDesignation(fallbackResponse.data.target_designation);
+          setHasResumes(true);
+        }
+      } catch (fallbackError) {
+        setHasResumes(false);
+      }
     }
   };
 
@@ -87,6 +97,22 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
     onBackToHistory?.();
   };
 
+  const handleActivateResume = async (resumeId) => {
+    try {
+      await resumeAPI.activateResume(resumeId);
+      // Reload the active resume data
+      checkForExistingResumes();
+    } catch (error) {
+      console.error('Failed to activate resume:', error);
+      alert('Failed to activate resume. Please try again.');
+    }
+  };
+
+  const handleResumeUpdate = (updatedResumeData) => {
+    setResumeData(updatedResumeData);
+    setTargetDesignation(updatedResumeData.target_designation);
+  };
+
   return (
     <>
       {showUpload ? (
@@ -108,9 +134,34 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
         </div>
       ) : resumeData ? (
         <div className="space-y-6 animate-fade-in-up">
+          {!resumeData.is_active && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100">
+                  <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Viewing Resume in Read-Only Mode</p>
+                  <p className="text-xs text-amber-600">Activate this resume to make edits</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleActivateResume(resumeData.id)}
+                className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-colors"
+              >
+                Activate Resume
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5 space-y-6">
-              <UserProfile resumeData={resumeData} onUpdate={setResumeData} />
+              <UserProfile 
+                resumeData={resumeData} 
+                onUpdate={handleResumeUpdate} 
+                isReadOnly={!resumeData.is_active}
+              />
             </div>
             <div className="lg:col-span-7 space-y-6">
               <NextBestStep resumeData={resumeData} targetDesignation={targetDesignation} />

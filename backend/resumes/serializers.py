@@ -12,4 +12,4 @@ class ResumeSerializer(serializers.ModelSerializer):
 class ResumeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
-        fields = ('id', 'title', 'target_designation', 'original_filename', 'created_at', 'updated_at')
+        fields = ('id', 'title', 'target_designation', 'original_filename', 'is_active', 'created_at', 'updated_at')

@@ -23,18 +23,8 @@ const ResumeHistory = ({ onResumeSelect, onUploadNew }) => {
     }
   };
 
-  const handleResumeSelect = async (resumeId) => {
-    try {
-      const response = await resumeAPI.getResume(resumeId);
-      onResumeSelect(response.data);
-    } catch (err) {
-      console.error('Failed to load resume:', err);
-      alert('Failed to load selected resume');
-    }
-  };
 
-  const handleDeleteResume = async (resumeId, event) => {
-    event.stopPropagation();
+  const handleDeleteResume = async (resumeId) => {
     if (window.confirm('Are you sure you want to delete this resume?')) {
       try {
         await resumeAPI.deleteResume(resumeId);
@@ -43,6 +33,23 @@ const ResumeHistory = ({ onResumeSelect, onUploadNew }) => {
         console.error('Failed to delete resume:', err);
         alert('Failed to delete resume');
       }
+    }
+  };
+
+  const handleActivateResume = async (resumeId) => {
+    try {
+      await resumeAPI.activateResume(resumeId);
+      // Update local state to reflect the change
+      setResumes(resumes.map(resume => ({
+        ...resume,
+        is_active: resume.id === resumeId
+      })));
+      // Navigate to dashboard with the activated resume
+      const response = await resumeAPI.getResume(resumeId);
+      onResumeSelect(response.data);
+    } catch (err) {
+      console.error('Failed to activate resume:', err);
+      alert('Failed to activate resume');
     }
   };
 
@@ -109,7 +116,7 @@ const ResumeHistory = ({ onResumeSelect, onUploadNew }) => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Your Resumes</h2>
-          <p className="text-sm text-gray-500 mt-1">Select a resume to view insights or upload a new one</p>
+          <p className="text-sm text-gray-500 mt-1">Activate a resume to view insights or upload a new one</p>
         </div>
         <button onClick={onUploadNew} className="btn-secondary">
           Upload New Resume
@@ -120,21 +127,37 @@ const ResumeHistory = ({ onResumeSelect, onUploadNew }) => {
         {resumes.map((resume) => (
           <div
             key={resume.id}
-            onClick={() => handleResumeSelect(resume.id)}
-            className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group"
+            className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all group"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-start space-x-3">
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors">
-                    <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
+                    resume.is_active 
+                      ? 'bg-emerald-100 group-hover:bg-emerald-200' 
+                      : 'bg-indigo-100 group-hover:bg-indigo-200'
+                  }`}>
+                    {resume.is_active ? (
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
-                      {resume.title || resume.original_filename || `Resume ${resume.id}`}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {resume.title || resume.original_filename || `Resume ${resume.id}`}
+                      </h3>
+                      {resume.is_active && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                          ★ Active
+                        </span>
+                      )}
+                    </div>
                     {resume.target_designation && (
                       <p className="text-xs text-indigo-600 mt-1">
                         Target: {resume.target_designation}
@@ -149,15 +172,26 @@ const ResumeHistory = ({ onResumeSelect, onUploadNew }) => {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={(e) => handleDeleteResume(resume.id, e)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500"
-                title="Delete resume"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                {!resume.is_active && (
+                  <button
+                    onClick={() => handleActivateResume(resume.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded"
+                    title="Activate for editing"
+                  >
+                    Activate
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDeleteResume(resume.id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500"
+                  title="Delete resume"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         ))}

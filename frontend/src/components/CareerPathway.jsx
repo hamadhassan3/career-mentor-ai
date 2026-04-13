@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { resumeAPI } from '../config/api-resume-processor';
 
 const CareerPathway = ({ resumeData, targetDesignation }) => {
   const [pathway, setPathway] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Clear pathway when target designation changes
+  useEffect(() => {
+    setPathway(null);
+  }, [targetDesignation]);
 
   const generatePathway = async () => {
     setLoading(true);

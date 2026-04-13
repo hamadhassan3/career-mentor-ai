@@ -1,4 +1,5 @@
 import re
+import json
 from difflib import SequenceMatcher
 import pandas as pd
 from pathlib import Path
@@ -48,6 +49,38 @@ def load_occupation_titles(data_dir: Path = DATA_DIR) -> Tuple[List[str], Dict[s
             "type": "designation"
         }
 
+    return all_titles, title_lookup
+
+
+def load_ml_trained_designations(data_dir: Path = DATA_DIR) -> Tuple[List[str], Dict[str, dict]]:
+    """
+    Loads designation titles from the ML training data file (designation_aggregated_skills.json)
+    Returns only the designations that the machine learning model was trained on.
+    """
+    
+    json_path = data_dir / "processed" / "designation_aggregated_skills.json"
+    
+    if not json_path.exists():
+        raise FileNotFoundError(f"ML training data file not found: {json_path}")
+    
+    with open(json_path, 'r', encoding='utf-8') as f:
+        ml_data = json.load(f)
+    
+    all_titles = []
+    title_lookup = {}
+    
+    for designation in ml_data.keys():
+        key = normalize(designation)
+        
+        all_titles.append(key)
+        title_lookup[key] = {
+            "standardized_name": designation,
+            "code": "",  # No codes in ML training data
+            "category": designation,  # Use designation as category
+            "description": f"Machine Learning trained designation: {designation}",
+            "type": "ml_designation"
+        }
+    
     return all_titles, title_lookup
 
 
