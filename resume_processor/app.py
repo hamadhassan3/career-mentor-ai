@@ -8,9 +8,9 @@ from pathlib import Path
 
 # Import utilities from scripts folder
 from scripts.extract_resume import safe_parse_resume_from_file
-from scripts.clean_skills import clean_skills, load_technology_skills, load_soft_skills, load_language_skills
-from scripts.clean_designations import clean_designations, load_occupation_titles
-from scripts.extract_occupations import get_matching_occupations
+from scripts.clean_skills_new import clean_skills, load_technology_skills, load_soft_skills, load_language_skills
+from scripts.clean_designations_new import clean_designations, load_occupation_titles
+from scripts.extract_occupations_new import get_matching_occupations
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -123,7 +123,7 @@ def get_designations():
 
 @app.route('/skills/it', methods=['GET'])
 def get_it_categories():
-    return jsonify(it_categories)
+    return jsonify(skills)
 
 @app.route('/skills/languages', methods=['GET'])
 def get_languages():
@@ -133,6 +133,120 @@ def get_languages():
 def get_soft_skills():
     return jsonify(soft_skills_list)
 
+
+@app.route("/predict_next_skill", methods=["POST"])
+def predict_next_skill():
+    """Predict single best next skill using XGBoost model"""
+    try:
+        import pandas as pd
+        import pickle
+        import xgboost as xgb
+        
+        data = request.json
+        it_skills = set(data.get("it_skill_categories", []))
+        soft_skills = set(data.get("soft_skills", []))
+        profession = data.get("desired_designation", "")
+        
+        # Normalization function (same as in training)
+        def normalize_skill(skill):
+            return skill.lower().strip().replace(" ", "_")
+        
+        # Load single skill model
+        try:
+            with open("./model/single_skill_xgboost.pkl", 'rb') as f:
+                model_data = pickle.load(f)
+                
+            xgb_model = model_data['xgboost_model']
+            label_encoder = model_data['label_encoder']
+            feature_columns = model_data['feature_columns']
+            all_skills = set(model_data['all_skills'])
+            all_soft_skills = set(model_data['all_soft_skills'])
+            all_professions = set(model_data['all_professions'])
+            
+        except FileNotFoundError:
+            return jsonify({"error": "Single skill model not found. Please train the model first."}), 500
+        
+        # Create feature vector
+        features = {}
+        
+        # IT skill features
+        for skill in sorted(all_skills):
+            features[f"has_it_{skill}"] = 1 if skill in it_skills else 0
+            
+        # Soft skill features  
+        for skill in sorted(all_soft_skills):
+            features[f"has_soft_{skill}"] = 1 if skill in soft_skills else 0
+            
+        # Profession features
+        for prof in sorted(all_professions):
+            features[f"prof_{prof}"] = 1 if prof == profession else 0
+            
+        # Count features
+        features["it_skill_count"] = len(it_skills)
+        features["soft_skill_count"] = len(soft_skills)
+        features["total_skill_count"] = len(it_skills) + len(soft_skills)
+        
+        # Add interaction features (simplified)
+        prof_col = f"prof_{profession}"
+        for skill in it_skills:
+            it_col = f"has_it_{skill}"
+            interaction_name = f"int_{prof_col}_{it_col}"
+            if interaction_name in feature_columns:
+                features[interaction_name] = 1
+        
+        # Create DataFrame with same columns as training data
+        feature_df = pd.DataFrame([features])
+        
+        # Ensure all columns exist
+        for col in feature_columns:
+            if col not in feature_df.columns:
+                feature_df[col] = 0
+                
+        # Reorder columns to match training data
+        feature_df = feature_df[feature_columns]
+        
+        # Predict
+        dtest_single = xgb.DMatrix(feature_df)
+        probabilities = xgb_model.predict(dtest_single)[0]
+        
+        # Get all predictions and sort by probability
+        sorted_indices = np.argsort(probabilities)[::-1]
+        all_skills = label_encoder.inverse_transform(sorted_indices)
+        all_probs = probabilities[sorted_indices]
+        
+        # Filter out current skills
+        current_skills_normalized = set()
+        for skill in list(it_skills) + list(soft_skills):
+            # Add various normalizations to catch different formats
+            current_skills_normalized.add(f"IT_{normalize_skill(skill)}")
+            current_skills_normalized.add(f"SOFT_{normalize_skill(skill)}")
+            current_skills_normalized.add(f"IT_{skill.upper().replace(' ', '_')}")
+            current_skills_normalized.add(f"SOFT_{skill.upper().replace(' ', '_')}")
+        
+        # Get top NEW skills (excluding current ones)
+        new_predictions = []
+        for skill, prob in zip(all_skills, all_probs):
+            if skill not in current_skills_normalized:
+                skill_clean = skill.replace('IT_', '').replace('SOFT_', '').replace('_', ' ')
+                skill_type = 'IT' if skill.startswith('IT_') else 'Soft'
+                new_predictions.append({
+                    "skill": skill_clean,
+                    "type": skill_type,
+                    "confidence": float(prob)
+                })
+                if len(new_predictions) >= 3:  # Get top 3 NEW skills
+                    break
+        
+        predictions = new_predictions
+        
+        return jsonify({
+            "best_next_skill": predictions[0] if predictions else None,
+            "top_3_skills": predictions,
+            "note": "Predictions exclude skills you already have"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -180,25 +294,59 @@ def predict():
         it_pred, soft_pred = model.predict([X_it, X_soft, X_des])
 
         # -----------------------------
-        # Convert predictions to readable labels
+        # Convert predictions to readable labels with dynamic thresholding
         # -----------------------------
-        threshold = 0.5
+        def get_profession_based_threshold(pred_scores, base_threshold=0.005):
+            """Dynamic threshold based on prediction confidence - fixed for actual model output"""
+            max_score = np.max(pred_scores)
+            if max_score > 0.2:  # High confidence (top 20%)
+                return base_threshold * 0.5  # Lower threshold 
+            elif max_score > 0.05:  # Medium confidence 
+                return base_threshold
+            else:
+                return base_threshold * 2.0  # Higher threshold for uncertain predictions
 
-        predicted_it = [
-            it_index_word[i]
+        it_threshold = get_profession_based_threshold(it_pred[0], base_threshold=0.005)
+        soft_threshold = get_profession_based_threshold(soft_pred[0], base_threshold=0.005)
+
+        # EXCLUDE CURRENT SKILLS - Get current skill indices to exclude
+        current_it_indices = set()
+        current_soft_indices = set()
+        
+        for skill in it_skills_norm:
+            idx = it_tokenizer.word_index.get(skill)
+            if idx:
+                current_it_indices.add(idx)
+                
+        for skill in soft_skills_norm:
+            idx = soft_tokenizer.word_index.get(skill)
+            if idx:
+                current_soft_indices.add(idx)
+
+        # Get predictions above threshold, EXCLUDING current skills
+        predicted_it_with_scores = [
+            (it_index_word[i], prob)
             for i, prob in enumerate(it_pred[0])
-            if prob > threshold and i in it_index_word
+            if prob > it_threshold and i in it_index_word and i not in current_it_indices
+        ]
+        
+        predicted_soft_with_scores = [
+            (soft_index_word[i], prob)
+            for i, prob in enumerate(soft_pred[0])
+            if prob > soft_threshold and i in soft_index_word and i not in current_soft_indices
         ]
 
-        predicted_soft = [
-            soft_index_word[i]
-            for i, prob in enumerate(soft_pred[0])
-            if prob > threshold and i in soft_index_word
-        ]
+        # Sort by confidence and limit results
+        predicted_it_with_scores.sort(key=lambda x: x[1], reverse=True)
+        predicted_soft_with_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        predicted_it = [skill for skill, _ in predicted_it_with_scores[:10]]  # Top 10 NEW skills
+        predicted_soft = [skill for skill, _ in predicted_soft_with_scores[:8]]  # Top 8 NEW skills
 
         return jsonify({
             "predicted_next_it_skills": predicted_it,
-            "predicted_next_soft_skills": predicted_soft
+            "predicted_next_soft_skills": predicted_soft,
+            "note": "Predictions exclude skills you already have"
         })
 
     except Exception as e:
@@ -263,6 +411,7 @@ def process_resume():
         return jsonify(resume_data), 200
 
     except Exception as e:
+        logging.exception("Error processing resume upload")
         return jsonify({"error": str(e)}), 500
     
     finally:

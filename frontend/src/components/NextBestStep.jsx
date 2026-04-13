@@ -9,7 +9,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
     setLoading(true);
     try {
       const response = await resumeAPI.predictNextSkills({
-        itSkills: resumeData.it_skill_categories,
+        itSkills: resumeData.it_skills,
         softSkills: resumeData.soft_skills,
         designation: targetDesignation,
       });
