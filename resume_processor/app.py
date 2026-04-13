@@ -241,8 +241,7 @@ def predict_next_skill():
         
         return jsonify({
             "best_next_skill": predictions[0] if predictions else None,
-            "top_3_skills": predictions,
-            "note": "Predictions exclude skills you already have"
+            "top_3_skills": predictions
         })
 
     except Exception as e:

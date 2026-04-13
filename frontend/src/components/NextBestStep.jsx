@@ -8,19 +8,30 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
   const generateRecommendations = async () => {
     setLoading(true);
     try {
-      const response = await resumeAPI.predictNextSkills({
+      const response = await resumeAPI.predictNextSingleSkill({
         itSkills: resumeData.it_skills,
         softSkills: resumeData.soft_skills,
         designation: targetDesignation,
       });
-      const formattedSkills = response.data.predicted_next_it_skills.map(skill =>
-        skill.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-      );
-      setRecommendations({
-        title: formattedSkills[0],
-        skills: formattedSkills,
-        impact: 'High',
-      });
+      
+      const bestSkill = response.data.best_next_skill;
+      const topSkills = response.data.top_3_skills;
+      
+      if (bestSkill) {
+        setRecommendations({
+          title: bestSkill.skill,
+          type: bestSkill.type,
+          confidence: bestSkill.confidence,
+          skills: topSkills.map(skill => skill.skill),
+          impact: bestSkill.confidence > 0.7 ? 'High' : bestSkill.confidence > 0.4 ? 'Medium' : 'Low',
+        });
+      } else {
+        setRecommendations({
+          title: 'No recommendations available',
+          skills: [],
+          impact: 'Low',
+        });
+      }
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
     } finally {
@@ -57,8 +68,20 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
       ) : (
         <div className="space-y-4 animate-fade-in-up">
           <div className="flex items-start justify-between">
-            <h4 className="font-semibold text-gray-900">{recommendations.title}</h4>
-            <span className="tag tag-amber text-xs">{recommendations.impact} Impact</span>
+            <div>
+              <h4 className="font-semibold text-gray-900">{recommendations.title}</h4>
+              {recommendations.type && (
+                <span className="text-xs text-gray-500">{recommendations.type} Skill</span>
+              )}
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className="tag tag-amber text-xs">{recommendations.impact} Impact</span>
+              {recommendations.confidence && (
+                <span className="text-xs text-gray-400">
+                  {Math.round(recommendations.confidence * 100)}% confidence
+                </span>
+              )}
+            </div>
           </div>
 
           <div>

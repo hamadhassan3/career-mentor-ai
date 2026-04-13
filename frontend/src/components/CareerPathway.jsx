@@ -1,44 +1,132 @@
 import React, { useState } from 'react';
+import { resumeAPI } from '../config/api-resume-processor';
 
-const CareerPathway = ({ resumeData }) => {
+const CareerPathway = ({ resumeData, targetDesignation }) => {
   const [pathway, setPathway] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const generatePathway = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API endpoint when available
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Use the old /predict API to get meaningful recommendations
+      const response = await resumeAPI.predictNextSkills({
+        itSkills: resumeData?.it_skills || [],
+        softSkills: resumeData?.soft_skills || [],
+        designation: targetDesignation || "",
+      });
+
+      const itSkills = response.data.predicted_next_it_skills || [];
+      const softSkills = response.data.predicted_next_soft_skills || [];
+      
+      // Transform predictions into career pathway stages
+      const allSkills = [...itSkills, ...softSkills];
+      const currentLevel = resumeData?.designition?.[0] || "Entry Level";
+      const targetRole = targetDesignation || "Senior Role";
+      
+      // Create meaningful stages based on skill predictions
+      const stages = [];
+      
+      // Foundation stage (first 1/3 of skills)
+      const foundationSkills = allSkills.slice(0, Math.ceil(allSkills.length / 3));
+      if (foundationSkills.length > 0) {
+        stages.push({
+          title: "Foundation Building",
+          duration: "3-6 months",
+          skills: foundationSkills.map(skill => 
+            skill.split('_').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ')
+          ),
+          milestones: [
+            `Master ${foundationSkills[0]?.replace(/_/g, ' ')}`,
+            "Build practical projects",
+            "Complete relevant certification"
+          ],
+          status: "current"
+        });
+      }
+      
+      // Advanced stage (middle 1/3 of skills)
+      const advancedSkills = allSkills.slice(Math.ceil(allSkills.length / 3), Math.ceil(2 * allSkills.length / 3));
+      if (advancedSkills.length > 0) {
+        stages.push({
+          title: "Advanced Development",
+          duration: "6-12 months",
+          skills: advancedSkills.map(skill => 
+            skill.split('_').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ')
+          ),
+          milestones: [
+            "Lead complex projects",
+            "Mentor junior colleagues",
+            "Contribute to system architecture"
+          ],
+          status: "upcoming"
+        });
+      }
+      
+      // Specialization stage (last 1/3 of skills)
+      const expertSkills = allSkills.slice(Math.ceil(2 * allSkills.length / 3));
+      if (expertSkills.length > 0) {
+        stages.push({
+          title: "Specialization & Leadership",
+          duration: "12-18 months",
+          skills: expertSkills.map(skill => 
+            skill.split('_').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ')
+          ),
+          milestones: [
+            "Become domain expert",
+            "Drive technical strategy",
+            "Lead cross-functional teams"
+          ],
+          status: "future"
+        });
+      }
+      
+      // Fallback if no predictions available
+      if (stages.length === 0) {
+        stages.push({
+          title: "Skill Development",
+          duration: "6-12 months",
+          skills: ["Continuous Learning", "Professional Development"],
+          milestones: ["Identify growth opportunities", "Build relevant skills"],
+          status: "current"
+        });
+      }
+
       setPathway({
-        currentLevel: "Mid-Level Developer",
-        targetRole: "Senior Cloud Solutions Architect",
-        stages: [
-          {
-            title: "Cloud Foundation",
-            duration: "3-6 months",
-            skills: ["AWS Basics", "Docker", "Microservices"],
-            milestones: ["AWS Certified Developer", "Deploy containerized app"],
-            status: "current"
-          },
-          {
-            title: "Advanced Cloud Architecture",
-            duration: "6-12 months",
-            skills: ["Kubernetes", "Terraform", "System Design"],
-            milestones: ["AWS Solutions Architect", "Design scalable systems"],
-            status: "upcoming"
-          },
-          {
-            title: "Leadership & Strategy",
-            duration: "12-18 months",
-            skills: ["Team Leadership", "Architecture Strategy", "Cost Optimization"],
-            milestones: ["Lead cloud migration", "Mentor junior developers"],
-            status: "future"
-          }
-        ],
-        timelineTotal: "2-3 years"
+        currentLevel,
+        targetRole,
+        stages,
+        timelineTotal: stages.length > 2 ? "2-3 years" : stages.length > 1 ? "1-2 years" : "6-12 months"
       });
     } catch (error) {
       console.error('Failed to generate pathway:', error);
+      // Fallback pathway on error
+      setPathway({
+        currentLevel: resumeData?.designition?.[0] || "Current Role",
+        targetRole: targetDesignation || "Target Role",
+        stages: [
+          {
+            title: "Skill Assessment",
+            duration: "1-2 months",
+            skills: ["Self Assessment", "Goal Setting"],
+            milestones: ["Complete skills audit", "Define career goals"],
+            status: "current"
+          },
+          {
+            title: "Professional Development",
+            duration: "6-12 months",
+            skills: ["Industry Knowledge", "Technical Skills"],
+            milestones: ["Complete relevant training", "Build portfolio"],
+            status: "upcoming"
+          }
+        ],
+        timelineTotal: "1-2 years"
+      });
     } finally {
       setLoading(false);
     }

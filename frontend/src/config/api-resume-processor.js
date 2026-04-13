@@ -66,6 +66,15 @@ export const resumeAPI = {
       desired_designation: designation,
     });
   },
+
+  predictNextSingleSkill: ({ itSkills = [], softSkills = [], designation = "" }) => {
+    console.log(itSkills, softSkills, designation);
+    return apiClient.post('/predict_next_skill', {
+      it_skill_categories: itSkills,
+      soft_skills: softSkills,
+      desired_designation: designation,
+    });
+  },
 };
 
 export default apiClient;
