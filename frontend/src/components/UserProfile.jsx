@@ -62,9 +62,17 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
       setPendingDesignationSave(true);
       dispatch(setWarning({
         message: "Changing role will clear recommendations. Continue?",
-        onConfirm: () => {
+        onConfirm: async () => {
           dispatch(clearWarning());
           setPendingDesignationSave(false);
+          
+          // Clear recommendations from backend
+          try {
+            await backendResumeAPI.clearRecommendations();
+          } catch (error) {
+            console.error('Failed to clear backend recommendations:', error);
+          }
+          
           performSave(field);
         },
         onCancel: () => {

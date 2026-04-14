@@ -40,3 +40,67 @@ class Resume(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.title or self.original_filename or f'Resume {self.id}'}"
+
+
+class NextBestStep(models.Model):
+    resume = models.OneToOneField(Resume, on_delete=models.CASCADE, related_name='next_step')
+    title = models.CharField(max_length=255)
+    skill_type = models.CharField(max_length=50, blank=True, null=True)  # IT/Soft skill
+    confidence = models.FloatField(blank=True, null=True)
+    impact = models.CharField(max_length=20, blank=True, null=True)  # High/Medium/Low
+    recommended_skills = models.JSONField(default=list, blank=True)
+    target_designation = models.CharField(max_length=255, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'next_best_steps'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.resume.user.username} - Next Step: {self.title}"
+
+
+class CareerPathway(models.Model):
+    resume = models.OneToOneField(Resume, on_delete=models.CASCADE, related_name='career_path')
+    current_level = models.CharField(max_length=255, blank=True, null=True)
+    target_role = models.CharField(max_length=255, blank=True, null=True)
+    timeline_total = models.CharField(max_length=50, blank=True, null=True)  # "2-3 years"
+    target_designation = models.CharField(max_length=255, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'career_pathways'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.resume.user.username} - Career Path: {self.current_level} → {self.target_role}"
+
+
+class CareerStage(models.Model):
+    STATUS_CHOICES = [
+        ('current', 'Current'),
+        ('upcoming', 'Upcoming'),
+        ('future', 'Future'),
+    ]
+    
+    pathway = models.ForeignKey(CareerPathway, on_delete=models.CASCADE, related_name='stages')
+    title = models.CharField(max_length=255)
+    duration = models.CharField(max_length=50)  # "3-6 months"
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='upcoming')
+    skills = models.JSONField(default=list, blank=True)
+    milestones = models.JSONField(default=list, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'career_stages'
+        ordering = ['order', 'created_at']
+    
+    def __str__(self):
+        return f"{self.pathway.resume.user.username} - Stage: {self.title}"

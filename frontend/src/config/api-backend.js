@@ -68,6 +68,17 @@ export const resumeAPI = {
   getLatestResume: () => backendClient.get('/resumes/latest/'),
   getActiveResume: () => backendClient.get('/resumes/active/'),
   activateResume: (id) => backendClient.post(`/resumes/${id}/activate/`),
+  
+  // Next Best Step API
+  getNextBestStep: () => backendClient.get('/resumes/next-step/'),
+  saveNextBestStep: (data) => backendClient.post('/resumes/next-step/save/', data),
+  
+  // Career Pathway API
+  getCareerPathway: () => backendClient.get('/resumes/career-pathway/'),
+  saveCareerPathway: (data) => backendClient.post('/resumes/career-pathway/save/', data),
+  
+  // Clear recommendations
+  clearRecommendations: () => backendClient.delete('/resumes/recommendations/clear/'),
 };
 
 export default backendClient;

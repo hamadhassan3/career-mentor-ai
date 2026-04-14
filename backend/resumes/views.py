@@ -4,8 +4,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from .models import Resume
-from .serializers import ResumeSerializer, ResumeListSerializer
+from .models import Resume, NextBestStep, CareerPathway, CareerStage
+from .serializers import (
+    ResumeSerializer, ResumeListSerializer, NextBestStepSerializer,
+    CareerPathwaySerializer, CareerStageSerializer, ResumeWithRecommendationsSerializer
+)
 
 
 class ResumeListCreateView(generics.ListCreateAPIView):
@@ -43,7 +46,28 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        return super().update(request, *args, **kwargs)
+        # Check if target_designation is being changed
+        old_designation = instance.target_designation
+        new_designation = request.data.get('target_designation')
+        
+        response = super().update(request, *args, **kwargs)
+        
+        # Clear recommendations if target designation changed
+        if (new_designation is not None and 
+            new_designation != old_designation):
+            self._clear_resume_recommendations(instance)
+        
+        return response
+    
+    def _clear_resume_recommendations(self, resume):
+        """
+        Helper method to clear recommendations for a resume
+        """
+        try:
+            NextBestStep.objects.filter(resume=resume).delete()
+            CareerPathway.objects.filter(resume=resume).delete()
+        except Exception:
+            pass  # Silently ignore errors
     
     def partial_update(self, request, *args, **kwargs):
         """
@@ -58,7 +82,18 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        return super().partial_update(request, *args, **kwargs)
+        # Check if target_designation is being changed
+        old_designation = instance.target_designation
+        new_designation = request.data.get('target_designation')
+        
+        response = super().partial_update(request, *args, **kwargs)
+        
+        # Clear recommendations if target designation changed
+        if (new_designation is not None and 
+            new_designation != old_designation):
+            self._clear_resume_recommendations(instance)
+        
+        return response
 
 
 @api_view(['POST'])
@@ -138,5 +173,160 @@ def activate_resume(request, pk):
     
     except Resume.DoesNotExist:
         return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_next_best_step(request):
+    """
+    Save next best step recommendations for the active resume
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get or create next best step for this resume
+        next_step, created = NextBestStep.objects.get_or_create(
+            resume=resume,
+            defaults=request.data
+        )
+        
+        if not created:
+            # Update existing record
+            for field, value in request.data.items():
+                if hasattr(next_step, field):
+                    setattr(next_step, field, value)
+            next_step.save()
+        
+        serializer = NextBestStepSerializer(next_step)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_next_best_step(request):
+    """
+    Get next best step recommendations for the active resume
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            next_step = NextBestStep.objects.get(resume=resume)
+            serializer = NextBestStepSerializer(next_step)
+            return Response(serializer.data)
+        except NextBestStep.DoesNotExist:
+            return Response({'message': 'No next step recommendations found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_career_pathway(request):
+    """
+    Save career pathway recommendations for the active resume
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        stages_data = request.data.pop('stages', [])
+        
+        with transaction.atomic():
+            # Get or create career pathway
+            pathway, created = CareerPathway.objects.get_or_create(
+                resume=resume,
+                defaults=request.data
+            )
+            
+            if not created:
+                # Update existing pathway
+                for field, value in request.data.items():
+                    if hasattr(pathway, field):
+                        setattr(pathway, field, value)
+                pathway.save()
+                
+                # Clear existing stages
+                pathway.stages.all().delete()
+            
+            # Create stages
+            for i, stage_data in enumerate(stages_data):
+                stage_data['order'] = i
+                CareerStage.objects.create(pathway=pathway, **stage_data)
+        
+        serializer = CareerPathwaySerializer(pathway)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_career_pathway(request):
+    """
+    Get career pathway recommendations for the active resume
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            pathway = CareerPathway.objects.get(resume=resume)
+            serializer = CareerPathwaySerializer(pathway)
+            return Response(serializer.data)
+        except CareerPathway.DoesNotExist:
+            return Response({'message': 'No career pathway found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def clear_recommendations(request):
+    """
+    Clear both next best step and career pathway recommendations for the active resume
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        deleted_count = 0
+        
+        # Delete next best step
+        try:
+            next_step = NextBestStep.objects.get(resume=resume)
+            next_step.delete()
+            deleted_count += 1
+        except NextBestStep.DoesNotExist:
+            pass
+        
+        # Delete career pathway (cascades to stages)
+        try:
+            pathway = CareerPathway.objects.get(resume=resume)
+            pathway.delete()
+            deleted_count += 1
+        except CareerPathway.DoesNotExist:
+            pass
+        
+        return Response({
+            'message': f'Cleared {deleted_count} recommendation(s)',
+            'cleared_items': deleted_count
+        })
+    
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

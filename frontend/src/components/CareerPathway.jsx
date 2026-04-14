@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
+import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
 
 const CareerPathway = ({ resumeData, targetDesignation }) => {
@@ -12,6 +13,33 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
   useEffect(() => {
     setPathway(null);
   }, [targetDesignation]);
+
+  // Load existing career pathway when component mounts
+  useEffect(() => {
+    const loadExistingPathway = async () => {
+      try {
+        const response = await backendResumeAPI.getCareerPathway();
+        const pathwayData = response.data;
+        
+        // Transform backend data to match frontend format
+        setPathway({
+          currentLevel: pathwayData.current_level,
+          targetRole: pathwayData.target_role,
+          timelineTotal: pathwayData.timeline_total,
+          stages: pathwayData.stages || [],
+        });
+      } catch (error) {
+        // No existing pathway found, which is fine
+        if (error.response?.status !== 404) {
+          console.error('Failed to load existing career pathway:', error);
+        }
+      }
+    };
+
+    if (resumeData && targetDesignation) {
+      loadExistingPathway();
+    }
+  }, [resumeData, targetDesignation]);
 
   const generatePathway = async () => {
     setLoading(true);
@@ -106,18 +134,34 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         });
       }
 
-      setPathway({
+      const pathwayData = {
         currentLevel,
         targetRole,
         stages,
         timelineTotal: stages.length > 2 ? "2-3 years" : stages.length > 1 ? "1-2 years" : "6-12 months"
-      });
+      };
+      
+      setPathway(pathwayData);
+      
+      // Save to database
+      try {
+        await backendResumeAPI.saveCareerPathway({
+          current_level: currentLevel,
+          target_role: targetRole,
+          timeline_total: pathwayData.timelineTotal,
+          target_designation: targetDesignation,
+          stages: stages,
+        });
+      } catch (error) {
+        console.error('Failed to save career pathway to database:', error);
+      }
+      
       dispatch(setPresenting('Fawkes has your career roadmap ready!'));
       setTimeout(() => dispatch(setIdle()), 2000);
     } catch (error) {
       console.error('Failed to generate pathway:', error);
       // Fallback pathway on error
-      setPathway({
+      const fallbackPathway = {
         currentLevel: resumeData?.designition?.[0] || "Current Role",
         targetRole: targetDesignation || "Target Role",
         stages: [
@@ -137,7 +181,23 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
           }
         ],
         timelineTotal: "1-2 years"
-      });
+      };
+      
+      setPathway(fallbackPathway);
+      
+      // Save fallback to database
+      try {
+        await backendResumeAPI.saveCareerPathway({
+          current_level: fallbackPathway.currentLevel,
+          target_role: fallbackPathway.targetRole,
+          timeline_total: fallbackPathway.timelineTotal,
+          target_designation: targetDesignation,
+          stages: fallbackPathway.stages,
+        });
+      } catch (dbError) {
+        console.error('Failed to save fallback career pathway to database:', dbError);
+      }
+      
       dispatch(setIdle());
     } finally {
       setLoading(false);

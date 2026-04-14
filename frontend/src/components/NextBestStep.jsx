@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
+import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
@@ -12,6 +13,34 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
   useEffect(() => {
     setRecommendations(null);
   }, [targetDesignation]);
+
+  // Load existing recommendations when component mounts
+  useEffect(() => {
+    const loadExistingRecommendations = async () => {
+      try {
+        const response = await backendResumeAPI.getNextBestStep();
+        const nextStep = response.data;
+        
+        // Transform backend data to match frontend format
+        setRecommendations({
+          title: nextStep.title,
+          type: nextStep.skill_type,
+          confidence: nextStep.confidence,
+          skills: nextStep.recommended_skills,
+          impact: nextStep.impact,
+        });
+      } catch (error) {
+        // No existing recommendations found, which is fine
+        if (error.response?.status !== 404) {
+          console.error('Failed to load existing recommendations:', error);
+        }
+      }
+    };
+
+    if (resumeData && targetDesignation) {
+      loadExistingRecommendations();
+    }
+  }, [resumeData, targetDesignation]);
 
   const generateRecommendations = async () => {
     setLoading(true);
@@ -27,21 +56,53 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
       const topSkills = response.data.top_3_skills;
       
       if (bestSkill) {
-        setRecommendations({
+        const recommendationData = {
           title: bestSkill.skill,
           type: bestSkill.type,
           confidence: bestSkill.confidence,
           skills: topSkills.map(skill => skill.skill),
           impact: bestSkill.confidence > 0.7 ? 'High' : bestSkill.confidence > 0.4 ? 'Medium' : 'Low',
-        });
+        };
+        
+        setRecommendations(recommendationData);
+        
+        // Save to database
+        try {
+          await backendResumeAPI.saveNextBestStep({
+            title: bestSkill.skill,
+            skill_type: bestSkill.type,
+            confidence: bestSkill.confidence,
+            recommended_skills: topSkills.map(skill => skill.skill),
+            impact: recommendationData.impact,
+            target_designation: targetDesignation,
+          });
+        } catch (error) {
+          console.error('Failed to save next step to database:', error);
+        }
+        
         dispatch(setPresenting('Fawkes has your skill recommendations ready!'));
         setTimeout(() => dispatch(setIdle()), 2000);
       } else {
-        setRecommendations({
+        const fallbackData = {
           title: 'No recommendations available',
           skills: [],
           impact: 'Low',
-        });
+        };
+        
+        setRecommendations(fallbackData);
+        
+        // Save fallback to database
+        try {
+          await backendResumeAPI.saveNextBestStep({
+            title: 'No recommendations available',
+            recommended_skills: [],
+            impact: 'Low',
+            target_designation: targetDesignation,
+          });
+        } catch (error) {
+          console.error('Failed to save fallback next step to database:', error);
+        }
+        
         dispatch(setIdle());
       }
     } catch (error) {
