@@ -20,4 +20,7 @@ urlpatterns = [
     
     # Clear recommendations
     path('recommendations/clear/', views.clear_recommendations, name='clear-recommendations'),
+    
+    # Course recommendations
+    path('courses/', views.get_course_recommendations, name='get-course-recommendations'),
 ]

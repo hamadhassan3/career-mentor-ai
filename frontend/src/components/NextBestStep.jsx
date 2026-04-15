@@ -3,15 +3,19 @@ import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
+import CourseRecommendations from './CourseRecommendations';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
   const dispatch = useDispatch();
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   // Clear recommendations when target designation changes
   useEffect(() => {
     setRecommendations(null);
+    setCourses([]);
   }, [targetDesignation]);
 
   // Load existing recommendations when component mounts
@@ -29,6 +33,9 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
           skills: nextStep.recommended_skills,
           impact: nextStep.impact,
         });
+        
+        // Load course recommendations
+        loadCourseRecommendations();
       } catch (error) {
         // No existing recommendations found, which is fine
         if (error.response?.status !== 404) {
@@ -41,6 +48,22 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
       loadExistingRecommendations();
     }
   }, [resumeData, targetDesignation]);
+
+  // Load course recommendations
+  const loadCourseRecommendations = async () => {
+    setLoadingCourses(true);
+    try {
+      const response = await backendResumeAPI.getCourseRecommendations();
+      setCourses(response.data.courses || []);
+    } catch (error) {
+      if (error.response?.status !== 404) {
+        console.error('Failed to load course recommendations:', error);
+      }
+      setCourses([]);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
 
   const generateRecommendations = async () => {
     setLoading(true);
@@ -82,6 +105,9 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
         
         dispatch(setPresenting('Fawkes has your skill recommendations ready!'));
         setTimeout(() => dispatch(setIdle()), 2000);
+        
+        // Load course recommendations after successful generation
+        loadCourseRecommendations();
       } else {
         const fallbackData = {
           title: 'No recommendations available',
@@ -172,6 +198,8 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
               ))}
             </div>
           </div>
+
+          <CourseRecommendations courses={courses} loadingCourses={loadingCourses} />
 
           <button onClick={generateRecommendations} disabled={loading} className="btn-secondary text-sm w-full">
             {loading ? (

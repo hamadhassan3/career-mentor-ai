@@ -79,6 +79,9 @@ export const resumeAPI = {
   
   // Clear recommendations
   clearRecommendations: () => backendClient.delete('/resumes/recommendations/clear/'),
+  
+  // Course recommendations
+  getCourseRecommendations: () => backendClient.get('/resumes/courses/'),
 };
 
 export default backendClient;

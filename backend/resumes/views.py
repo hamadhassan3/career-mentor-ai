@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.conf import settings
+import requests
+import os
 from .models import Resume, NextBestStep, CareerPathway, CareerStage
 from .serializers import (
     ResumeSerializer, ResumeListSerializer, NextBestStepSerializer,
@@ -327,6 +330,66 @@ def clear_recommendations(request):
             'message': f'Cleared {deleted_count} recommendation(s)',
             'cleared_items': deleted_count
         })
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_course_recommendations(request):
+    """
+    Get course recommendations for the next best skill
+    """
+    try:
+        resume = Resume.objects.filter(user=request.user, is_active=True).first()
+        if not resume:
+            return Response({'error': 'No active resume found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            next_step = NextBestStep.objects.get(resume=resume)
+        except NextBestStep.DoesNotExist:
+            return Response({'error': 'No next step recommendations found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Use the main skill (title) as the search query
+        skill_query = next_step.title
+        if not skill_query or skill_query == 'No recommendations available':
+            return Response({'courses': []}, status=status.HTTP_200_OK)
+        
+        try:
+            # Get course recommendation service URL from environment
+            course_api_url = os.getenv('COURSE_RECOMMENDATION_API_BASE_URL', 'http://localhost:5051')
+            
+            # Make request to course recommendation service
+            response = requests.post(
+                f"{course_api_url}/courses/search",
+                json={
+                    "query": skill_query,
+                    "platforms": ["udemy"],
+                    "limit": 3
+                },
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                course_data = response.json()
+                return Response({
+                    'skill': skill_query,
+                    'courses': course_data.get('courses', [])[:3]  # Ensure only 3 courses
+                })
+            else:
+                return Response({
+                    'skill': skill_query,
+                    'courses': [],
+                    'error': 'Failed to fetch course recommendations'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                
+        except requests.RequestException as e:
+            return Response({
+                'skill': skill_query,
+                'courses': [],
+                'error': f'Course recommendation service unavailable: {str(e)}'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
