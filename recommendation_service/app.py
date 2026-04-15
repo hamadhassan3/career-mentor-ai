@@ -3,6 +3,13 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from scrapers.scraper_factory import ScraperFactory
 
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
 CORS(app)
 
@@ -57,9 +64,10 @@ def search_coursera():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@app.route('/courses/udemy', methods=['POST'])
-def search_udemy():
-    """Search courses on Udemy"""
+
+@app.route('/courses/youtube', methods=['POST'])
+def search_youtube():
+    """Search course playlists on YouTube"""
     try:
         data = request.get_json()
         query = data.get('query', '').strip()
@@ -68,21 +76,21 @@ def search_udemy():
         if not query:
             return jsonify({'error': 'Query parameter is required'}), 400
 
-        scraper = ScraperFactory.get_scraper('udemy')
+        scraper = ScraperFactory.get_scraper('youtube')
         courses = scraper.search_courses(query, limit)
 
         for course in courses:
-            course['platform'] = 'udemy'
+            course['platform'] = 'youtube'
 
         return jsonify({
-            'platform': 'udemy',
+            'platform': 'youtube',
             'query': query,
             'total_results': len(courses),
             'courses': courses
         })
 
     except Exception as e:
-        logger.error("Error in Udemy search: %s", str(e))
+        logger.error("Error in YouTube search: %s", str(e))
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -92,7 +100,7 @@ def search_courses():
     try:
         data = request.get_json()
         query = data.get('query', '').strip()
-        platforms = data.get('platforms', ['coursera', 'udemy'])
+        platforms = data.get('platforms', ['coursera', 'youtube'])
         limit = data.get('limit', 10)
 
         if not query:

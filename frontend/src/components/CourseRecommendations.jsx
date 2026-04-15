@@ -7,7 +7,7 @@ const CourseRecommendations = ({ courses, loadingCourses }) => {
 
   return (
     <div className="border-t pt-4">
-      <p className="text-xs font-medium text-gray-500 mb-2">Recommended Courses</p>
+      <p className="text-xs font-medium text-gray-500 mb-2">Recommended Learning Material</p>
       {loadingCourses ? (
         <div className="flex items-center justify-center py-4">
           <svg className="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@ const CourseRecommendations = ({ courses, loadingCourses }) => {
         </div>
       ) : (
         <div className="space-y-2">
-          {courses.slice(0, 3).map((course, index) => (
+          {courses.map((course, index) => (
             <div
               key={index}
               onClick={() => {

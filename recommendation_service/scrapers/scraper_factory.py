@@ -1,12 +1,12 @@
 from typing import Dict, Type
 from .base_scraper import BaseScraper
 from .coursera_scraper import CourseraScraper
-from .udemy_scraper import UdemyScraper
+from .youtube_scraper import YouTubeScraper
 
 class ScraperFactory:
     _scrapers: Dict[str, Type[BaseScraper]] = {
         'coursera': CourseraScraper,
-        'udemy': UdemyScraper,
+        'youtube': YouTubeScraper,
     }
     
     @classmethod

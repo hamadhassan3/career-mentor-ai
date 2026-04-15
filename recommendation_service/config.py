@@ -21,11 +21,12 @@ class Config:
             'search_endpoint': '/search',
             'rate_limit': 1.5,
         },
-        'udemy': {
-            'enabled': os.environ.get('UDEMY_ENABLED', 'True').lower() == 'true',
-            'base_url': 'https://www.udemy.com',
-            'search_endpoint': '/courses/search/',
-            'rate_limit': 1.0,
+        'youtube': {
+            'enabled': os.environ.get('YOUTUBE_ENABLED', 'True').lower() == 'true',
+            'base_url': 'https://www.googleapis.com/youtube/v3',
+            'search_endpoint': '/search',
+            'rate_limit': 2.0,
+            'api_key': os.environ.get('YOUTUBE_API_KEY'),
         }
     }
     

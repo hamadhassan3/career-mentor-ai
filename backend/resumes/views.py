@@ -365,7 +365,7 @@ def get_course_recommendations(request):
                 f"{course_api_url}/courses/search",
                 json={
                     "query": skill_query,
-                    "platforms": ["udemy"],
+                    "platforms": ["youtube", "coursera"],
                     "limit": 3
                 },
                 timeout=10
@@ -375,7 +375,7 @@ def get_course_recommendations(request):
                 course_data = response.json()
                 return Response({
                     'skill': skill_query,
-                    'courses': course_data.get('courses', [])[:3]  # Ensure only 3 courses
+                    'courses': course_data.get('courses', [])[:]  # Ensure only 3 courses
                 })
             else:
                 return Response({
