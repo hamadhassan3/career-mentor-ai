@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'resumes',
+    'resume_processor',
 ]
 
 MIDDLEWARE = [
