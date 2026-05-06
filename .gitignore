@@ -1,5 +1,4 @@
 resume_processor/model
-resume_processor/scripts/data/**
 notebooks/__pycache__/**
 .DS_Store
 resume_processor/notebooks/parsed_data.json
@@ -8,7 +7,12 @@ resume_processor/notebooks/parsed_resumes.json
 Pipfile.lock
 resume_processor/notebooks/cleaned_resumes.json
 resume_processor/notebooks/cleaning_report.json
-resume_processor/data
+resume_processor/scripts/data/ResumesJsonAnnotated
+resume_processor/scripts/data/processed/cleaned_resumes.json
+resume_processor/scripts/data/processed/cleaning_report.json
+resume_processor/scripts/data/processed/essential_resumes.json
+resume_processor/scripts/data/processed/parsed_resumes.json
+resume_processor/scripts/data/processed/training_data.json
 **/__pycache__/**
 **/db.sqlite3
 **/.env
