@@ -113,6 +113,16 @@ width = ${components.tok2vec.model.encode.width}
     # 2. Fix resumeparse.py compatibility issues
     resumeparse_path = os.path.join(base_path, "resumeparse.py")
     
+    if not os.path.exists(resumeparse_path):
+        print(f"❌ Could not find resumeparse.py at: {resumeparse_path}")
+        print(f"📁 Available files in {base_path}:")
+        try:
+            for file in os.listdir(base_path):
+                print(f"   - {file}")
+        except OSError:
+            print("   (Unable to list directory contents)")
+        return
+    
     with open(resumeparse_path, 'r') as f:
         content = f.read()
     
