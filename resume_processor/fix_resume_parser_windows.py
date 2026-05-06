@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-One-click fix for resume_parser OSError and spaCy compatibility issues.
+Windows-specific fix for resume_parser OSError and spaCy compatibility issues.
 Run this after: pip install resume-parser
 """
 
@@ -8,10 +8,56 @@ import os
 import sys
 
 def fix_resume_parser():
-    # Find resume_parser installation path without importing it
+    # Find resume_parser installation path for Windows virtual environments
     import site
-    packages_path = site.getsitepackages()[0]
-    base_path = os.path.join(packages_path, 'resume_parser')
+    
+    # Try multiple potential package locations
+    possible_paths = []
+    
+    # Add site-packages paths
+    try:
+        possible_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+    
+    # Add user site packages
+    try:
+        possible_paths.append(site.getusersitepackages())
+    except AttributeError:
+        pass
+    
+    # Add virtual environment site-packages (Windows uses Lib not lib)
+    if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+        # Windows virtual environment path
+        venv_packages_win = os.path.join(sys.prefix, 'Lib', 'site-packages')
+        if os.path.exists(venv_packages_win):
+            possible_paths.append(venv_packages_win)
+        
+        # Unix virtual environment path (fallback)
+        venv_packages = os.path.join(sys.prefix, 'lib', 'site-packages')
+        if os.path.exists(venv_packages):
+            possible_paths.append(venv_packages)
+    
+    # Find the actual resume_parser path
+    base_path = None
+    for path in possible_paths:
+        potential_path = os.path.join(path, 'resume_parser')
+        if os.path.exists(potential_path):
+            # Check if resumeparse.py actually exists
+            resumeparse_check = os.path.join(potential_path, 'resumeparse.py')
+            if os.path.exists(resumeparse_check):
+                base_path = potential_path
+                break
+    
+    if not base_path:
+        print("❌ Could not find resume_parser installation with resumeparse.py")
+        print("Searching in these paths:")
+        for path in possible_paths:
+            print(f"  - {path}")
+        print("Please ensure it's installed with: pip install resume-parser")
+        return
+    
+    print(f"✅ Found resume_parser at: {base_path}")
     
     # 1. Create missing config.cfg
     config_path = os.path.join(base_path, "degree", "model", "config.cfg")
@@ -74,6 +120,8 @@ width = ${components.tok2vec.model.encode.width}
     with open(config_path, 'w') as f:
         f.write(config_content)
     
+    print("✅ Created config.cfg")
+    
     # 2. Fix resumeparse.py compatibility issues
     resumeparse_path = os.path.join(base_path, "resumeparse.py")
     
@@ -99,6 +147,7 @@ width = ${components.tok2vec.model.encode.width}
     with open(resumeparse_path, 'w') as f:
         f.write(content)
     
+    print("✅ Fixed resumeparse.py compatibility issues")
     print("✅ Resume parser fixed successfully!")
 
 if __name__ == "__main__":
