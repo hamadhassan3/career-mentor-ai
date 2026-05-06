@@ -10,8 +10,44 @@ import sys
 def fix_resume_parser():
     # Find resume_parser installation path without importing it
     import site
-    packages_path = site.getsitepackages()[0]
-    base_path = os.path.join(packages_path, 'resume_parser')
+    
+    # Try multiple potential package locations
+    possible_paths = []
+    
+    # Add site-packages paths
+    try:
+        possible_paths.extend(site.getsitepackages())
+    except AttributeError:
+        pass
+    
+    # Add user site packages
+    try:
+        possible_paths.append(site.getusersitepackages())
+    except AttributeError:
+        pass
+    
+    # Add virtual environment site-packages
+    if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+        venv_packages = os.path.join(sys.prefix, 'lib', 'site-packages')
+        if os.path.exists(venv_packages):
+            possible_paths.append(venv_packages)
+        
+        # Windows virtual environment path
+        venv_packages_win = os.path.join(sys.prefix, 'Lib', 'site-packages')
+        if os.path.exists(venv_packages_win):
+            possible_paths.append(venv_packages_win)
+    
+    # Find the actual resume_parser path
+    base_path = None
+    for path in possible_paths:
+        potential_path = os.path.join(path, 'resume_parser')
+        if os.path.exists(potential_path):
+            base_path = potential_path
+            break
+    
+    if not base_path:
+        print("❌ Could not find resume_parser installation. Please ensure it's installed with: pip install resume-parser")
+        return
     
     # 1. Create missing config.cfg
     config_path = os.path.join(base_path, "degree", "model", "config.cfg")
