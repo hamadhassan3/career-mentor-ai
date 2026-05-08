@@ -11,6 +11,8 @@
 
 from __future__ import division
 import nltk
+import ssl
+import urllib.request
 
 # nltk.download('punkt')
 # nltk.download('averaged_perceptron_tagger')
@@ -42,6 +44,14 @@ import operator
 import string
 import nltk
 from stemming.porter2 import stem
+
+# Configure SSL context to handle certificate issues on Windows
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
 
 # load pre-trained model
 base_path = os.path.dirname(__file__)
@@ -244,7 +254,7 @@ class resumeparse(object):
             clean_text = re.sub(r'\n+', '\n', text)
             clean_text = clean_text.replace("\r", "\n").replace("\t", " ")  # Normalize text blob
             resume_lines = clean_text.splitlines()  # Split text blob into individual lines
-            resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if
+            resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if
                             line.strip()]  # Remove empty strings and whitespaces
             return resume_lines, text
         except Exception as e:
@@ -299,7 +309,7 @@ class resumeparse(object):
             resume_lines = full_string.splitlines(True)
 
             # Remove empty strings and whitespaces
-            resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
+            resume_lines = [re.sub(r'\s+', ' ', line.strip()) for line in resume_lines if line.strip()]
 
             return resume_lines, raw_text
         except Exception as e:
@@ -508,7 +518,7 @@ class resumeparse(object):
                       end_year_result = int(correct_year(end_year_result))
                     except Exception as e:
                       logging.error(str(e))
-                      end_year_result = int(re.search("\d+",correct_year(end_year_result)).group())
+                      end_year_result = int(re.search(r"\d+",correct_year(end_year_result)).group())
 
             if (start_year == -1) or (start_year_result <= start_year):
                 start_year = start_year_result
