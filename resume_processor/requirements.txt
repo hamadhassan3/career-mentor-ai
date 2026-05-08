@@ -59,6 +59,7 @@ regex==2026.4.4
 requests==2.33.1
 resume-parser==0.8.4
 rich==15.0.0
+scipy==1.17.1
 setuptools==82.0.1
 shellingham==1.5.4
 six==1.17.0
@@ -82,3 +83,4 @@ weasel==1.0.0
 Werkzeug==3.1.8
 wheel==0.47.0
 wrapt==2.1.2
+xgboost==3.2.0
