@@ -1,6 +1,11 @@
 import json
 import os
 import tempfile
+
+# Configure TensorFlow for memory optimization BEFORE any imports
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Reduce TensorFlow logging
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN optimizations to save memory
+
 from flask import Flask, request, jsonify
 import datetime
 import numpy as np
@@ -15,8 +20,18 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+# Configure TensorFlow memory growth to prevent memory allocation issues
+import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    try:
+        for device in physical_devices:
+            tf.config.experimental.set_memory_growth(device, True)
+    except RuntimeError as e:
+        print(f"Memory growth must be set before GPUs have been initialized: {e}")
+
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)  # Reduce logging verbosity
 
 # -----------------------------
 # Paths
@@ -419,4 +434,6 @@ def process_resume():
             os.remove(temp_path)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5050, debug=True)
+    # Disable debug mode for production to reduce memory usage
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=5050, debug=debug_mode, threaded=True)
