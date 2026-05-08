@@ -58,11 +58,15 @@ def proxy_request(request, path):
                     timeout=60
                 )
             else:
-                # Forward JSON data
+                # Forward JSON data - ensure Content-Type is set for JSON requests
+                json_headers = headers.copy()
+                if request.body and not json_headers.get('Content-Type'):
+                    json_headers['Content-Type'] = 'application/json'
+                
                 response = requests.post(
                     target_url,
                     data=request.body,
-                    headers=headers,
+                    headers=json_headers,
                     timeout=60
                 )
         elif request.method == 'PUT':
