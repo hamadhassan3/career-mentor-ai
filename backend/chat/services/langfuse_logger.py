@@ -8,11 +8,20 @@ import os
 
 class LangfuseLogger:
     def __init__(self):
-        self.langfuse = Langfuse(
-            secret_key=os.getenv('LANGFUSE_SECRET_KEY'),
-            public_key=os.getenv('LANGFUSE_PUBLIC_KEY'),
-            host=os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')
-        ) if os.getenv('LANGFUSE_SECRET_KEY') else None
+        self.secret_key = os.getenv('LANGFUSE_SECRET_KEY')
+        self.public_key = os.getenv('LANGFUSE_PUBLIC_KEY')
+        self.host = os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')
+        
+        
+        if self.secret_key:
+            self.langfuse = Langfuse(
+                secret_key=self.secret_key,
+                public_key=self.public_key,
+                host=self.host
+            )
+        else:
+            self.langfuse = None
+            
         self.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="langfuse")
     
     def create_trace(self, 
@@ -24,17 +33,28 @@ class LangfuseLogger:
             return None
             
         try:
-            trace = self.langfuse.trace.create(
+            # Create a proper trace (not a span)
+            trace = self.langfuse.start_observation(
                 name=f"chat_conversation_{conversation_id}",
+                as_type="generation",  # This creates a proper trace-level observation
+                input={
+                    "conversation_id": conversation_id,
+                    "user_id": user_id,
+                    "user_context": user_context
+                },
                 metadata={
                     "conversation_id": conversation_id,
                     "user_id": user_id,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             )
-            return trace.id
+            
+            trace_id = trace.trace_id
+            
+            # End the trace to ensure it's recorded properly
+            trace.end()
+            return trace_id
         except Exception as e:
-            print(f"Error creating Langfuse trace: {e}")
             return None
     
     def log_llm_call(self, 
@@ -51,27 +71,35 @@ class LangfuseLogger:
     def _log_llm_call_sync(self, trace_id: str, model: str, system_prompt: str, user_message: str, assistant_response: str, token_usage: Dict[str, int]):
         """Synchronous LLM call logging"""
         try:
-            self.langfuse.generation(
-                trace_id=trace_id,
-                name="llm_generation",
+            # Create trace context and link the generation to it
+            from langfuse.types import TraceContext
+            trace_context = TraceContext(trace_id=trace_id)
+            
+            generation = self.langfuse.start_observation(
+                trace_context=trace_context,
+                name="llm_generation", 
+                as_type="generation",
                 model=model,
                 input=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
                 output=assistant_response,
-                usage={
+                usage_details={
                     "input": token_usage.get("input_tokens", 0),
                     "output": token_usage.get("output_tokens", 0),
                     "total": token_usage.get("total_tokens", 0)
                 },
                 metadata={
                     "timestamp": datetime.utcnow().isoformat(),
-                    "tools": []  # Ready for future tool calling
+                    "model": model
                 }
             )
+            
+            # End the generation to make sure it's recorded
+            generation.end()
         except Exception as e:
-            print(f"Error logging LLM call: {e}")
+            pass
     
     def _submit_async(self, func, *args, **kwargs):
         """Submit function to background thread"""
@@ -88,7 +116,7 @@ class LangfuseLogger:
         try:
             self.langfuse.flush()
         except Exception as e:
-            print(f"Error flushing Langfuse logs: {e}")
+            pass
 
 
 # Singleton instance
