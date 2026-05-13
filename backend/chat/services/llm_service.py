@@ -1,4 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from django.conf import settings
 from typing import List, Dict
@@ -7,13 +7,14 @@ import os
 
 class LLMService:
     def __init__(self):
-        self.model = ChatGoogleGenerativeAI(
-            model="gemini-3.1-flash-lite",
-            google_api_key=os.getenv('GOOGLE_API_KEY'),
+        groq_api_key = os.getenv('GROQ_API_KEY')
+        
+        self.model = ChatGroq(
+            model="llama-3.1-8b-instant",
+            api_key=groq_api_key,
             temperature=0.7,
-            max_tokens=1024,
-            top_p=0.9
-        ) if os.getenv('GOOGLE_API_KEY') else None
+            max_tokens=1024
+        ) if groq_api_key else None
     
     def generate_response(self, 
                          system_prompt: str, 

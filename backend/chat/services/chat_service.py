@@ -178,7 +178,7 @@ class ChatService:
             # Log LLM call
             langfuse_logger.log_llm_call(
                 trace_id=trace_id,
-                model="gemini-3.1-flash-lite",
+                model="llama-3.1-8b-instant",
                 system_prompt=system_prompt[:500] + "..." if len(system_prompt) > 500 else system_prompt,
                 user_message=message,
                 assistant_response=ai_response,
