@@ -16,3 +16,4 @@ resume_processor/scripts/data/processed/training_data.json
 **/__pycache__/**
 **/db.sqlite3
 **/.env
+**/.env.production

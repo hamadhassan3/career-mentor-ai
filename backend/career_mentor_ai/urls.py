@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/resumes/', include('resumes.urls')),
     path('api/auth/', include('users.urls')),
     path('api/resume-processor/', include('resume_processor.urls')),
+    path('api/chat/', include('chat.urls')),
 ]

@@ -1,4 +1,4 @@
-const Logo = ({ size = 'md', className = '', rounded = true }) => {
+const Logo = ({ size = 'md', className = '', rounded = true, title }) => {
   const sizeClasses = {
     header: 'w-12 h-12',
     sm: 'w-8 h-8',
@@ -14,6 +14,7 @@ const Logo = ({ size = 'md', className = '', rounded = true }) => {
       <img 
         src="/logo.png" 
         alt={process.env.REACT_APP_NAME} 
+        title={title}
         className="w-full h-full object-contain"
       />
     </div>

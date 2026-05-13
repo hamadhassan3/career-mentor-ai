@@ -84,4 +84,11 @@ export const resumeAPI = {
   getCourseRecommendations: () => backendClient.get('/resumes/courses/'),
 };
 
+export const chatAPI = {
+  sendMessage: (data) => backendClient.post('/chat/', data),
+  getConversationHistory: (conversationId = null) => backendClient.get('/chat/', {
+    params: conversationId ? { conversation_id: conversationId } : {}
+  }),
+};
+
 export default backendClient;

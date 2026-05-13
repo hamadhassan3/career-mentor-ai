@@ -44,8 +44,8 @@ export default function Header({ activeTab, onTabChange, showTabs = true }) {
 
   const logoElement = (
     <Link to="/" className="flex items-center gap-3 flex-shrink-0">
-      <Logo size="header" />
-      <span className="text-xl font-bold text-gray-900 tracking-tight">{process.env.REACT_APP_NAME}</span>
+      <Logo size="header" title={process.env.REACT_APP_NAME} />
+      <span className="text-xl font-bold text-gray-900 tracking-tight hidden sm:inline">{process.env.REACT_APP_NAME}</span>
     </Link>
   );
 

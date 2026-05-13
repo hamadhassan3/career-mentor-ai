@@ -1,13 +1,58 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleVisibility } from '../store/avatarSlice';
+import { useAuth } from '../context/AuthContext';
+import ChatWindow from './ChatWindow';
+import { useState, useEffect } from 'react';
 
 const Avatar = () => {
   const { currentState, isVisible, warningData, encouragingMessage, presentingMessage } = useSelector((state) => state.avatar);
   const dispatch = useDispatch();
+  const { user } = useAuth();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showGreeting, setShowGreeting] = useState(false);
+  const [lastActivity, setLastActivity] = useState(Date.now());
 
   const handleToggleVisibility = () => {
     dispatch(toggleVisibility());
   };
+
+  const handleAvatarClick = () => {
+    setIsChatOpen(true);
+    setShowGreeting(false);
+  };
+
+  useEffect(() => {
+    const handleActivity = () => {
+      setLastActivity(Date.now());
+      setShowGreeting(false);
+    };
+
+    const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity);
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isChatOpen && (currentState === 'idle' || currentState === 'listening')) {
+      const timer = setInterval(() => {
+        const timeSinceActivity = Date.now() - lastActivity;
+        if (timeSinceActivity >= 5000 && !showGreeting) {
+          setShowGreeting(true);
+        }
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    } else {
+      setShowGreeting(false);
+    }
+  }, [isChatOpen, currentState, lastActivity, showGreeting]);
 
   if (!isVisible) {
     return (
@@ -126,10 +171,11 @@ const Avatar = () => {
     >
       <div className="relative">
         <div 
-          className="w-20 h-20 rounded-full overflow-hidden transition-all duration-500 hover:scale-110 hover:-translate-y-2 group transform-gpu"
+          className="w-20 h-20 rounded-full overflow-hidden transition-all duration-500 hover:scale-110 hover:-translate-y-2 group transform-gpu cursor-pointer"
           style={{
             boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)',
           }}
+          onClick={handleAvatarClick}
           onMouseEnter={(e) => {
             e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.15)';
           }}
@@ -165,7 +211,26 @@ const Avatar = () => {
             <span className="hidden group-hover:block">Listening</span>
           </div>
         </div>
+        
+        {/* Greeting bubble when chat is closed */}
+        {showGreeting && (
+          <div className="absolute -top-14 right-0 animate-bounce">
+            <div className="relative bg-white rounded-lg shadow-lg px-3 py-2 border border-gray-200">
+              <div className="text-sm text-gray-800 whitespace-nowrap">
+                👋 Hi! I'm Fawkes. Need help?
+              </div>
+              <div className="absolute top-full right-3">
+                <div className="w-0 h-0 border-t-8 border-t-white border-l-4 border-l-transparent border-r-4 border-r-transparent"></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      <ChatWindow 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        userName={user?.first_name || user?.username}
+      />
     </div>
   );
 };

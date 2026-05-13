@@ -63,19 +63,21 @@ function App() {
         />
       )}
       
-      <Routes>
-        <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
-        <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
-        <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
-        <Route path="/reset-password/:uid/:token" element={<GuestOnly><ResetPassword /></GuestOnly>} />
-        <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
-        <Route
-          path="/totp-setup"
-          element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
-        />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/" element={<ProtectedRoute><MainApp activeTab={activeTab} onTabChange={handleTabChange} /></ProtectedRoute>} />
-      </Routes>
+      <div className={user && user.totp_confirmed ? "pb-32" : ""}>
+        <Routes>
+          <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+          <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
+          <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+          <Route path="/reset-password/:uid/:token" element={<GuestOnly><ResetPassword /></GuestOnly>} />
+          <Route path="/totp-verify" element={pendingTotp ? <TOTPVerify /> : <Navigate to="/login" />} />
+          <Route
+            path="/totp-setup"
+            element={user ? (user.totp_confirmed ? <Navigate to="/" /> : <TOTPSetup />) : <Navigate to="/login" />}
+          />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><MainApp activeTab={activeTab} onTabChange={handleTabChange} /></ProtectedRoute>} />
+        </Routes>
+      </div>
       
       {user && user.totp_confirmed && <Avatar />}
     </>

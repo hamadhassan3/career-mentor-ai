@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'users',
     'resumes',
     'resume_processor',
+    'chat',
 ]
 
 MIDDLEWARE = [
