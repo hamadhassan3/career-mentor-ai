@@ -8,7 +8,7 @@ import os
 class LLMService:
     def __init__(self):
         self.model = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-3.1-flash-lite",
             google_api_key=os.getenv('GOOGLE_API_KEY'),
             temperature=0.7,
             max_tokens=1024,
@@ -49,7 +49,13 @@ class LLMService:
             
             # Generate response
             response = self.model.invoke(messages)
-            return response.content
+            
+            # Handle Gemini 3.1 Flash Lite response format
+            content = response.content
+            if isinstance(content, list) and content:
+                return content[0]['text']
+            
+            return content
             
         except Exception as e:
             print(f"Error generating response: {e}")

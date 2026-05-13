@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { chatAPI } from '../config/api-backend';
+import ReactMarkdown from 'react-markdown';
 
 const ChatWindow = ({ isOpen, onClose, userName }) => {
   const [messages, setMessages] = useState([]);
@@ -209,7 +210,27 @@ const ChatWindow = ({ isOpen, onClose, userName }) => {
                         : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md shadow-sm'
                     }`}
                   >
-                    <p className="leading-relaxed">{message.text}</p>
+                    {message.isUser ? (
+                      <p className="leading-relaxed">{message.text}</p>
+                    ) : (
+                      <div className="leading-relaxed">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 last:mb-0 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 last:mb-0 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="ml-2">{children}</li>,
+                            strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                            code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                            h1: ({ children }) => <h1 className="text-lg font-semibold mb-2 text-gray-900">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base font-semibold mb-1 text-gray-900">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 text-gray-900">{children}</h3>,
+                          }}
+                        >
+                          {message.text}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                     <div className={`text-xs mt-1 ${
                       message.isUser ? 'text-indigo-100' : 'text-gray-500'
                     } ${message.isUser ? 'text-right' : 'text-left'}`}>
