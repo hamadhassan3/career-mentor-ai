@@ -8,13 +8,13 @@ import ResumeHistory from './ResumeHistory.jsx';
 import UserProfile from './UserProfile.jsx';
 import NextBestStep from './NextBestStep.jsx';
 import CareerPathway from './CareerPathway.jsx';
+import DailyNudge from './DailyNudge.jsx';
 
 export default function Dashboard({ shouldShowUpload = false, onUploadStateChange, onBackToHistory }) {
   const [resumeData, setResumeData] = useState(null);
   const [targetDesignation, setTargetDesignation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showUpload, setShowUpload] = useState(shouldShowUpload);
-  const [hasResumes, setHasResumes] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -31,7 +31,6 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
       if (response.data) {
         setResumeData(response.data);
         setTargetDesignation(response.data.target_designation);
-        setHasResumes(true);
       }
     } catch (error) {
       // Fallback to latest resume if no active resume found
@@ -40,10 +39,8 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
         if (fallbackResponse.data) {
           setResumeData(fallbackResponse.data);
           setTargetDesignation(fallbackResponse.data.target_designation);
-          setHasResumes(true);
-        }
+          }
       } catch (fallbackError) {
-        setHasResumes(false);
       }
     }
   };
@@ -69,7 +66,6 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
       setTargetDesignation(designation);
       setShowUpload(false);
       onUploadStateChange?.(false);
-      setHasResumes(true);
       dispatch(setState('idle'));
     } catch (error) {
       console.error('Upload error:', error);
@@ -155,6 +151,7 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
               </button>
             </div>
           )}
+          <DailyNudge />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5 space-y-6">
               <UserProfile 

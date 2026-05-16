@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'resumes',
     'resume_processor',
     'chat',
+    'nudge',
 ]
 
 MIDDLEWARE = [

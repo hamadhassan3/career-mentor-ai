@@ -12,59 +12,8 @@ class ChatService:
     
     @staticmethod
     def build_user_context(user) -> str:
-        """Build user context string from Django models"""
-        try:
-            # Get active resume
-            active_resume = user.resumes.filter(is_active=True).first()
-            
-            # Get next step
-            next_step = user.next_steps.first() if hasattr(user, 'next_steps') else None
-            
-            # Get career pathway
-            career_pathway = user.career_pathways.first() if hasattr(user, 'career_pathways') else None
-            
-            # Build context string
-            context_parts = []
-            
-            # User Profile
-            context_parts.append(f"User Profile:")
-            context_parts.append(f"Name: {user.first_name} {user.last_name}")
-            
-            if active_resume:
-                context_parts.append(f"Target Role: {getattr(active_resume, 'target_designation', 'Not specified')}")
-                context_parts.append(f"Experience: {getattr(active_resume, 'total_exp', 0)} years")
-                
-                # Get skills - handle both list and string formats
-                skills = getattr(active_resume, 'it_skills', [])
-                if isinstance(skills, list):
-                    skills_str = ', '.join(skills[:10])  # Limit to 10 skills
-                else:
-                    skills_str = str(skills)[:200]  # Limit string length
-                context_parts.append(f"Current Skills: {skills_str}")
-            
-            if next_step:
-                context_parts.append(f"\nNext Best Step: {getattr(next_step, 'title', 'Not available')}")
-                # Handle recommended_skills
-                rec_skills = getattr(next_step, 'recommended_skills', [])
-                if isinstance(rec_skills, list):
-                    rec_skills_str = ', '.join(rec_skills)
-                else:
-                    rec_skills_str = str(rec_skills)
-                context_parts.append(f"Recommended Skills: {rec_skills_str}")
-                context_parts.append(f"Impact: {getattr(next_step, 'impact', 'Unknown')}")
-            
-            if career_pathway:
-                current_level = getattr(career_pathway, 'current_level', '')
-                target_role = getattr(career_pathway, 'target_role', '')
-                timeline = getattr(career_pathway, 'timeline_total', 'TBD')
-                context_parts.append(f"\nCareer Pathway: {current_level} → {target_role}")
-                context_parts.append(f"Timeline: {timeline}")
-            
-            return '\n'.join(context_parts)
-            
-        except Exception as e:
-            print(f"Error building user context: {e}")
-            return f"User Profile:\nName: {user.first_name} {user.last_name}\nTarget Role: Career guidance seeker"
+        """Build user context string from Django models - delegates to prompt_service"""
+        return prompt_service.build_user_context(user)
     
     @staticmethod
     def get_or_create_conversation(conversation_id: str = None, user=None) -> Conversation:

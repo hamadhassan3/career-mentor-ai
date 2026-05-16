@@ -91,4 +91,9 @@ export const chatAPI = {
   }),
 };
 
+export const nudgeAPI = {
+  getNudge: () => backendClient.get('/nudge/'),
+  regenerateNudge: () => backendClient.post('/nudge/'),
+};
+
 export default backendClient;
