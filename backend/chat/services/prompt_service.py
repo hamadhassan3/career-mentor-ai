@@ -9,7 +9,7 @@ You provide personalized career guidance based on each user's specific situation
 {user_context}
 
 GUIDELINES:
-- Provide personalized advice based on the user's specific career data above
+- Provide personalized advice based ONLY on the user's specific career data above
 - Only discuss career development, job search, and professional growth topics
 - If asked about unrelated topics, politely redirect: "I'm here to help with your career development. Let's focus on your career goals."
 - Be supportive and actionable in your guidance
@@ -17,6 +17,12 @@ GUIDELINES:
 - Use bullet points for multiple recommendations
 - Always tie advice back to the user's specific situation
 - Prioritize the most impactful advice first
+
+CRITICAL: If user asks about Next Best Step or Career Pathway that shows "Not yet generated":
+- DO NOT make up recommendations or suggestions
+- Instead, redirect them to generate these items first
+- Example: "I'd love to help with your next step! Please generate your Next Best Step first so I can give you personalized advice based on your specific situation."
+- Example: "To give you the best career pathway advice, please generate your Career Pathway first so I can see your personalized plan."
 
 {conversation_context}"""
 
@@ -26,20 +32,23 @@ GUIDELINES:
 
 CRITICAL INSTRUCTION: You MUST prioritize the specific information provided above in this exact order:
 
-1. IF "Next Best Step" is provided with specific recommended skills or actions → Create nudge about that exact step
-2. IF "Career Pathway" shows a target role → Create nudge about progressing toward that specific role  
-3. IF only current skills/resume info is available → Create nudge about improving those specific skills
+1. IF "Next Best Step" has specific data (not "Not yet generated") → Create nudge about completing that exact step
+2. IF "Career Pathway" has specific data (not "Not yet generated") → Create nudge about progressing toward that specific role
+3. IF Next Best Step or Career Pathway show "Not yet generated" → Create nudge encouraging them to generate these items first
+4. IF only current skills/resume info is available → Create nudge about improving those specific skills
 
 NUDGE REQUIREMENTS:
 - Keep it VERY short and punchy (around 20 words maximum)
 - Must reference SPECIFIC skills, roles, or actions from the context above
-- Do NOT give generic advice - use the actual data provided
+- Do NOT make up recommendations when data shows "Not yet generated"
+- For missing data, motivate them to generate the missing items first
 - Include ONE concrete action they can take today
 - Use an upbeat, motivational tone
 
 GOOD Examples (using specific context):
 - "Master React hooks today! Spend 30 minutes practicing - it's your next recommended skill."
 - "Apply to 2 Senior Developer roles today - you're ready for that promotion!"
+- "Generate your Next Best Step today! Discover which skills to focus on next."
 - "Polish your Python portfolio today - showcase those 3 years of experience!"
 
 BAD Examples (too generic):
@@ -60,11 +69,15 @@ CURRENT CONVERSATION CONTEXT:
             # Get active resume
             active_resume = user.resumes.filter(is_active=True).first()
             
-            # Get next step
-            next_step = user.next_steps.first() if hasattr(user, 'next_steps') else None
+            # Get next step (through resume relationship)
+            next_step = None
+            if active_resume and hasattr(active_resume, 'next_step'):
+                next_step = active_resume.next_step
             
-            # Get career pathway
-            career_pathway = user.career_pathways.first() if hasattr(user, 'career_pathways') else None
+            # Get career pathway (through resume relationship)
+            career_pathway = None
+            if active_resume and hasattr(active_resume, 'career_path'):
+                career_pathway = active_resume.career_path
             
             # Build context string
             context_parts = []
@@ -85,8 +98,10 @@ CURRENT CONVERSATION CONTEXT:
                     skills_str = str(skills)[:200]  # Limit string length
                 context_parts.append(f"Current Skills: {skills_str}")
             
+            # Always include Next Best Step section
+            context_parts.append(f"\nNext Best Step:")
             if next_step:
-                context_parts.append(f"\nNext Best Step: {getattr(next_step, 'title', 'Not available')}")
+                context_parts.append(f"Title: {getattr(next_step, 'title', 'Not available')}")
                 # Handle recommended_skills
                 rec_skills = getattr(next_step, 'recommended_skills', [])
                 if isinstance(rec_skills, list):
@@ -95,13 +110,46 @@ CURRENT CONVERSATION CONTEXT:
                     rec_skills_str = str(rec_skills)
                 context_parts.append(f"Recommended Skills: {rec_skills_str}")
                 context_parts.append(f"Impact: {getattr(next_step, 'impact', 'Unknown')}")
+            else:
+                context_parts.append(f"Status: Not yet generated by user - recommend they generate their next best step")
             
+            # Always include Career Pathway section
+            context_parts.append(f"\nCareer Pathway:")
             if career_pathway:
                 current_level = getattr(career_pathway, 'current_level', '')
                 target_role = getattr(career_pathway, 'target_role', '')
                 timeline = getattr(career_pathway, 'timeline_total', 'TBD')
-                context_parts.append(f"\nCareer Pathway: {current_level} → {target_role}")
+                context_parts.append(f"Path: {current_level} → {target_role}")
                 context_parts.append(f"Timeline: {timeline}")
+                
+                # Include detailed stages if they exist
+                if hasattr(career_pathway, 'stages'):
+                    stages = career_pathway.stages.all().order_by('order')
+                    if stages:
+                        context_parts.append(f"Stages:")
+                        for stage in stages:
+                            context_parts.append(f"  - {stage.title} ({stage.duration})")
+                            context_parts.append(f"    Status: {stage.get_status_display()}")
+                            
+                            # Include skills for this stage
+                            skills = getattr(stage, 'skills', [])
+                            if skills:
+                                if isinstance(skills, list):
+                                    skills_str = ', '.join(skills)
+                                else:
+                                    skills_str = str(skills)
+                                context_parts.append(f"    Required Skills: {skills_str}")
+                            
+                            # Include milestones if available
+                            milestones = getattr(stage, 'milestones', [])
+                            if milestones:
+                                if isinstance(milestones, list):
+                                    milestones_str = ', '.join(milestones)
+                                else:
+                                    milestones_str = str(milestones)
+                                context_parts.append(f"    Key Milestones: {milestones_str}")
+            else:
+                context_parts.append(f"Status: Not yet generated by user - recommend they generate their career pathway")
             
             return '\n'.join(context_parts)
             

@@ -128,7 +128,7 @@ class ChatService:
             langfuse_logger.log_llm_call(
                 trace_id=trace_id,
                 model=llm_service.model_name or "unknown",
-                system_prompt=system_prompt[:500] + "..." if len(system_prompt) > 500 else system_prompt,
+                system_prompt=system_prompt,  # Don't truncate - log full system prompt
                 user_message=message,
                 assistant_response=ai_response,
                 token_usage={}

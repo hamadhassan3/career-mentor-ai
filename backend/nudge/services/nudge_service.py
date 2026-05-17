@@ -66,7 +66,7 @@ class NudgeService:
             langfuse_logger.log_llm_call(
                 trace_id=trace_id,
                 model=llm_service.model_name or "unknown",
-                system_prompt=system_prompt[:500] + "..." if len(system_prompt) > 500 else system_prompt,
+                system_prompt=system_prompt,  # Don't truncate - log full system prompt
                 user_message="Generate my daily career nudge.",
                 assistant_response=nudge_content,
                 token_usage={}
