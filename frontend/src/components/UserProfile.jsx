@@ -3,8 +3,9 @@ import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setWarning, clearWarning, setEncouraging, setIdle } from '../store/avatarSlice';
+import SkillUploadModal from './SkillUploadModal';
 
-const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
+const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToProgress }) => {
   const dispatch = useDispatch();
   const [editMode, setEditMode] = useState({});
   const [formData, setFormData] = useState(resumeData);
@@ -14,6 +15,8 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
   const [designations, setDesignations] = useState([]);
   const [designationsLoading, setDesignationsLoading] = useState(false);
   const [pendingDesignationSave, setPendingDesignationSave] = useState(false);
+  const [showSkillUploadModal, setShowSkillUploadModal] = useState(false);
+  const [lastUpdatedSkill, setLastUpdatedSkill] = useState('');
 
   useEffect(() => {
     const fetchAllSkills = async () => {
@@ -115,12 +118,31 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
       // Show encouraging message for successful update
       dispatch(setEncouraging(getSuccessMessage(field)));
       setTimeout(() => dispatch(setIdle()), 3000);
+      
+      // Check if this is a skill update and prompt for screenshot upload
+      if ((field === 'it_skills' || field === 'soft_skills') && formData[field] && formData[field].length > 0) {
+        // Find the newly added skill by comparing with original data
+        const newSkills = formData[field].filter(skill => !resumeData[field]?.includes(skill));
+        if (newSkills.length > 0) {
+          const newestSkill = newSkills[newSkills.length - 1];
+          setLastUpdatedSkill(newestSkill);
+          setShowSkillUploadModal(true);
+        }
+      }
     } catch (error) {
       console.error('Failed to update resume:', error);
       const errorMessage = error.response?.data?.error || 'Failed to save changes. Please try again.';
       alert(errorMessage);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSkillUploadSuccess = (achievement) => {
+    setShowSkillUploadModal(false);
+    // Navigate to progress tree
+    if (onNavigateToProgress) {
+      onNavigateToProgress();
     }
   };
 
@@ -446,6 +468,14 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false }) => {
           {renderSkillsArray('Languages', 'languages', formData.languages || [], 'languages')}
         </div>
       </div>
+
+      {/* Skill Upload Modal */}
+      <SkillUploadModal
+        isOpen={showSkillUploadModal}
+        onClose={() => setShowSkillUploadModal(false)}
+        onSuccess={handleSkillUploadSuccess}
+        preselectedSkill={lastUpdatedSkill}
+      />
     </div>
   );
 };

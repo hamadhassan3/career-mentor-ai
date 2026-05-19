@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Dashboard from '../components/Dashboard.jsx';
 import ResumeHistory from '../components/ResumeHistory.jsx';
+import ProgressTree from '../components/ProgressTree.jsx';
 
 export default function MainApp({ activeTab, onTabChange }) {
   const [shouldShowUpload, setShouldShowUpload] = useState(false);
@@ -23,7 +24,7 @@ export default function MainApp({ activeTab, onTabChange }) {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} />;
+        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} onNavigateToProgress={() => onTabChange('progress')} />;
       case 'history':
         return (
           <div className="flex justify-center items-start min-h-[65vh] animate-fade-in">
@@ -34,11 +35,15 @@ export default function MainApp({ activeTab, onTabChange }) {
           </div>
         );
       case 'progress':
-        return <div className="text-center py-12 text-gray-500">Progress tab coming soon...</div>;
+        return (
+          <div className="flex justify-center items-start min-h-[65vh] animate-fade-in">
+            <ProgressTree />
+          </div>
+        );
       case 'events':
         return <div className="text-center py-12 text-gray-500">Events tab coming soon...</div>;
       default:
-        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} />;
+        return <Dashboard shouldShowUpload={shouldShowUpload} onUploadStateChange={setShouldShowUpload} onBackToHistory={handleBackToHistory} onNavigateToProgress={() => onTabChange('progress')} />;
     }
   };
 

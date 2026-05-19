@@ -10,7 +10,7 @@ import NextBestStep from './NextBestStep.jsx';
 import CareerPathway from './CareerPathway.jsx';
 import DailyNudge from './DailyNudge.jsx';
 
-export default function Dashboard({ shouldShowUpload = false, onUploadStateChange, onBackToHistory }) {
+export default function Dashboard({ shouldShowUpload = false, onUploadStateChange, onBackToHistory, onNavigateToProgress }) {
   const [resumeData, setResumeData] = useState(null);
   const [targetDesignation, setTargetDesignation] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -158,6 +158,7 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
                 resumeData={resumeData} 
                 onUpdate={handleResumeUpdate} 
                 isReadOnly={!resumeData.is_active}
+                onNavigateToProgress={onNavigateToProgress}
               />
             </div>
             <div className="lg:col-span-7 space-y-6">

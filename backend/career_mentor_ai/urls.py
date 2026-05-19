@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/resume-processor/', include('resume_processor.urls')),
     path('api/chat/', include('chat.urls')),
     path('api/nudge/', include('nudge.urls')),
+    path('api/progress/', include('progress.urls')),
 ]

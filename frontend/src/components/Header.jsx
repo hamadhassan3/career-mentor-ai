@@ -6,7 +6,7 @@ import UserAvatar from './UserAvatar';
 const tabs = [
   { id: 'dashboard', name: 'Dashboard', icon: '📊' },
   { id: 'history', name: 'History', icon: '📝' },
-  // { id: 'progress', name: 'Progress', icon: '📈' },
+  { id: 'progress', name: 'My Progress', icon: '🌳' },
   // { id: 'events', name: 'Events', icon: '📅' },
 ];
 
