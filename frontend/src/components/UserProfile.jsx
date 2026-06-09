@@ -386,6 +386,62 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
     );
   };
 
+  // Current role — a single designation chosen from the same list as Target
+  // Role. Stored as a one-element array since `designition` is an array
+  // elsewhere (e.g. CareerPathway reads designition[0]).
+  const renderCurrentRole = (label) => {
+    const field = 'designition';
+    const isEditing = editMode[field];
+    const currentValue = formData[field]?.[0] || '';
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-500">{label}</span>
+          {!isReadOnly && (
+            !isEditing ? (
+              <button onClick={() => handleEdit(field)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Edit</button>
+            ) : (
+              <button
+                onClick={() => handleSave(field)}
+                disabled={saving}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Done'}
+              </button>
+            )
+          )}
+        </div>
+        {isEditing ? (
+          <div className="space-y-2 animate-fade-in">
+            {designationsLoading ? (
+              <div className="input flex items-center text-gray-400 text-sm">
+                <svg className="animate-spin h-4 w-4 mr-2 text-gray-300" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Loading roles...
+              </div>
+            ) : (
+              <select
+                value={currentValue}
+                onChange={(e) => setFormData({ ...formData, [field]: e.target.value ? [e.target.value] : [] })}
+                className="input text-sm"
+                disabled={saving}
+              >
+                <option value="">Select current role...</option>
+                {designations.map((designation, index) => (
+                  <option key={index} value={designation}>{designation}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-900 text-sm">{currentValue || 'No role set'}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Target Role */}
@@ -457,7 +513,7 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
         <div className="space-y-5 divide-y divide-gray-100 [&>*:not(:first-child)]:pt-5">
           {renderEditableField('Experience', 'total_exp', `${formData.total_exp} years`)}
           {renderEditableArray('Education', 'university', formData.university || [])}
-          {renderEditableArray('Roles', 'designition', formData.designition || [])}
+          {renderCurrentRole('Current Role')}
           {renderEditableArray('Degrees', 'degree', formData.degree || [])}
           {renderSkillsArray('IT Skills', 'it_skills', formData.it_skills || [], 'it_skills')}
           {renderSkillsArray('Soft Skills', 'soft_skills', formData.soft_skills || [], 'soft_skills')}

@@ -6,6 +6,21 @@ import { setPresenting, setIdle } from '../store/avatarSlice';
 import CourseRecommendations from './CourseRecommendations';
 import { formatSkill } from '../utils/skills';
 
+// Compare skill names loosely (case / underscores / spacing) so we can tell
+// whether a recommended skill is one the user already has.
+const normalizeSkill = (skill) =>
+  String(skill ?? '')
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// The set of skills the user already has, normalized for loose comparison.
+const ownedSkillSet = (resumeData) =>
+  new Set(
+    [...(resumeData?.it_skills || []), ...(resumeData?.soft_skills || [])].map(normalizeSkill)
+  );
+
 const NextBestStep = ({ resumeData, targetDesignation }) => {
   const dispatch = useDispatch();
   const [recommendations, setRecommendations] = useState(null);
@@ -26,7 +41,9 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
         const response = await backendResumeAPI.getNextBestStep();
         const nextStep = response.data;
         
-        // Transform backend data to match frontend format
+        // Show the saved recommendation as-is. It was filtered against the
+        // user's skills when it was generated, and it should stay put until
+        // the user explicitly regenerates — adding a skill must not change it.
         setRecommendations({
           title: nextStep.title,
           type: nextStep.skill_type,
@@ -78,14 +95,24 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
       
       const bestSkill = response.data.best_next_skill;
       const topSkills = response.data.top_3_skills;
+
+      // The backend can still return skills the user already has (it normalizes
+      // skill names differently than they're stored). So walk the ranked
+      // candidate list — now up to 10 — and use the highest-ranked skill the
+      // user doesn't already have. Falls back to the top skill if all are owned.
+      const ownedSkills = ownedSkillSet(resumeData);
+      const nextSkill =
+        (topSkills || [])
+          .filter((candidate) => candidate && candidate.skill)
+          .find((candidate) => !ownedSkills.has(normalizeSkill(candidate.skill))) || bestSkill;
       
       if (bestSkill) {
         const recommendationData = {
-          title: bestSkill.skill,
-          type: bestSkill.type,
-          confidence: bestSkill.confidence,
+          title: nextSkill.skill,
+          type: nextSkill.type,
+          confidence: nextSkill.confidence,
           skills: topSkills.map(skill => skill.skill),
-          impact: bestSkill.confidence > 0.7 ? 'High' : bestSkill.confidence > 0.4 ? 'Medium' : 'Low',
+          impact: nextSkill.confidence > 0.7 ? 'High' : nextSkill.confidence > 0.4 ? 'Medium' : 'Low',
         };
         
         setRecommendations(recommendationData);
@@ -93,9 +120,9 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
         // Save to database
         try {
           await backendResumeAPI.saveNextBestStep({
-            title: bestSkill.skill,
-            skill_type: bestSkill.type,
-            confidence: bestSkill.confidence,
+            title: nextSkill.skill,
+            skill_type: nextSkill.type,
+            confidence: nextSkill.confidence,
             recommended_skills: topSkills.map(skill => skill.skill),
             impact: recommendationData.impact,
             target_designation: targetDesignation,

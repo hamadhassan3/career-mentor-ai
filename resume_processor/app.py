@@ -249,7 +249,7 @@ def predict_next_skill():
                     "type": skill_type,
                     "confidence": float(prob)
                 })
-                if len(new_predictions) >= 3:  # Get top 3 NEW skills
+                if len(new_predictions) >= 10:  # Get top 3 NEW skills
                     break
         
         predictions = new_predictions
