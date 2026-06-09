@@ -422,17 +422,12 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
                 Loading roles...
               </div>
             ) : (
-              <select
+              <SearchableDropdown
+                options={designations}
                 value={currentValue}
-                onChange={(e) => setFormData({ ...formData, [field]: e.target.value ? [e.target.value] : [] })}
-                className="input text-sm"
-                disabled={saving}
-              >
-                <option value="">Select current role...</option>
-                {designations.map((designation, index) => (
-                  <option key={index} value={designation}>{designation}</option>
-                ))}
-              </select>
+                onChange={(value) => setFormData({ ...formData, [field]: value ? [value] : [] })}
+                placeholder="Select current role..."
+              />
             )}
           </div>
         ) : (
@@ -460,17 +455,12 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
         
         {editMode.target_designation ? (
           <div className="space-y-3">
-            <select
+            <SearchableDropdown
+              options={designations}
               value={formData.target_designation || ''}
-              onChange={(e) => handleChange('target_designation', e.target.value)}
-              className="input w-full"
-              disabled={saving}
-            >
-              <option value="">Select target role...</option>
-              {designations.map((designation, index) => (
-                <option key={index} value={designation}>{designation}</option>
-              ))}
-            </select>
+              onChange={(value) => handleChange('target_designation', value)}
+              placeholder="Select target role..."
+            />
             <div className="flex gap-2">
               <button 
                 onClick={() => handleSave('target_designation')} 
