@@ -4,6 +4,13 @@ import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
 
+// Convert a snake_case skill key into a human-readable label
+const formatSkill = (skill) =>
+  skill
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
 const CareerPathway = ({ resumeData, targetDesignation }) => {
   const dispatch = useDispatch();
   const [pathway, setPathway] = useState(null);
@@ -20,12 +27,11 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
       try {
         const response = await backendResumeAPI.getCareerPathway();
         const pathwayData = response.data;
-        
+
         // Transform backend data to match frontend format
         setPathway({
           currentLevel: pathwayData.current_level,
           targetRole: pathwayData.target_role,
-          timelineTotal: pathwayData.timeline_total,
           stages: pathwayData.stages || [],
         });
       } catch (error) {
@@ -54,82 +60,50 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
 
       const itSkills = response.data.predicted_next_it_skills || [];
       const softSkills = response.data.predicted_next_soft_skills || [];
-      
+
       // Transform predictions into career pathway stages
       const allSkills = [...itSkills, ...softSkills];
       const currentLevel = resumeData?.designition?.[0] || "Entry Level";
       const targetRole = targetDesignation || "Senior Role";
-      
+
       // Create meaningful stages based on skill predictions
       const stages = [];
-      
+
       // Foundation stage (first 1/3 of skills)
       const foundationSkills = allSkills.slice(0, Math.ceil(allSkills.length / 3));
       if (foundationSkills.length > 0) {
         stages.push({
           title: "Foundation Building",
-          duration: "3-6 months",
-          skills: foundationSkills.map(skill => 
-            skill.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')
-          ),
-          milestones: [
-            `Master ${foundationSkills[0]?.replace(/_/g, ' ')}`,
-            "Build practical projects",
-            "Complete relevant certification"
-          ],
+          skills: foundationSkills.map(formatSkill),
           status: "current"
         });
       }
-      
+
       // Advanced stage (middle 1/3 of skills)
       const advancedSkills = allSkills.slice(Math.ceil(allSkills.length / 3), Math.ceil(2 * allSkills.length / 3));
       if (advancedSkills.length > 0) {
         stages.push({
           title: "Advanced Development",
-          duration: "6-12 months",
-          skills: advancedSkills.map(skill => 
-            skill.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')
-          ),
-          milestones: [
-            "Lead complex projects",
-            "Mentor junior colleagues",
-            "Contribute to system architecture"
-          ],
+          skills: advancedSkills.map(formatSkill),
           status: "upcoming"
         });
       }
-      
+
       // Specialization stage (last 1/3 of skills)
       const expertSkills = allSkills.slice(Math.ceil(2 * allSkills.length / 3));
       if (expertSkills.length > 0) {
         stages.push({
           title: "Specialization & Leadership",
-          duration: "12-18 months",
-          skills: expertSkills.map(skill => 
-            skill.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')
-          ),
-          milestones: [
-            "Become domain expert",
-            "Drive technical strategy",
-            "Lead cross-functional teams"
-          ],
+          skills: expertSkills.map(formatSkill),
           status: "future"
         });
       }
-      
+
       // Fallback if no predictions available
       if (stages.length === 0) {
         stages.push({
           title: "Skill Development",
-          duration: "6-12 months",
           skills: ["Continuous Learning", "Professional Development"],
-          milestones: ["Identify growth opportunities", "Build relevant skills"],
           status: "current"
         });
       }
@@ -138,24 +112,22 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         currentLevel,
         targetRole,
         stages,
-        timelineTotal: stages.length > 2 ? "2-3 years" : stages.length > 1 ? "1-2 years" : "6-12 months"
       };
-      
+
       setPathway(pathwayData);
-      
+
       // Save to database
       try {
         await backendResumeAPI.saveCareerPathway({
           current_level: currentLevel,
           target_role: targetRole,
-          timeline_total: pathwayData.timelineTotal,
           target_designation: targetDesignation,
           stages: stages,
         });
       } catch (error) {
         console.error('Failed to save career pathway to database:', error);
       }
-      
+
       dispatch(setPresenting('Fawkes has your career roadmap ready!'));
       setTimeout(() => dispatch(setIdle()), 2000);
     } catch (error) {
@@ -167,37 +139,31 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         stages: [
           {
             title: "Skill Assessment",
-            duration: "1-2 months",
             skills: ["Self Assessment", "Goal Setting"],
-            milestones: ["Complete skills audit", "Define career goals"],
             status: "current"
           },
           {
             title: "Professional Development",
-            duration: "6-12 months",
             skills: ["Industry Knowledge", "Technical Skills"],
-            milestones: ["Complete relevant training", "Build portfolio"],
             status: "upcoming"
           }
         ],
-        timelineTotal: "1-2 years"
       };
-      
+
       setPathway(fallbackPathway);
-      
+
       // Save fallback to database
       try {
         await backendResumeAPI.saveCareerPathway({
           current_level: fallbackPathway.currentLevel,
           target_role: fallbackPathway.targetRole,
-          timeline_total: fallbackPathway.timelineTotal,
           target_designation: targetDesignation,
           stages: fallbackPathway.stages,
         });
       } catch (dbError) {
         console.error('Failed to save fallback career pathway to database:', dbError);
       }
-      
+
       dispatch(setIdle());
     } finally {
       setLoading(false);
@@ -271,30 +237,14 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
                   <div className={`absolute left-0 top-1 w-[18px] h-[18px] rounded-full border-[3px] border-white ${style.dot} shadow-sm`} />
 
                   <div className={`${style.bg} rounded-xl p-4`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-gray-900">{stage.title}</h4>
-                      <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{stage.duration}</span>
-                    </div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">{stage.title}</h4>
 
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-1.5">Skills</p>
-                        <div className="flex flex-wrap gap-1">
-                          {stage.skills.map((skill, i) => (
-                            <span key={i} className="tag tag-indigo text-[11px]">{skill}</span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-1.5">Milestones</p>
-                        <ul className="space-y-1">
-                          {stage.milestones.map((milestone, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                              <span className={`w-1 h-1 rounded-full mt-1.5 flex-shrink-0 ${style.dot}`}></span>
-                              {milestone}
-                            </li>
-                          ))}
-                        </ul>
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 mb-1.5">Skills</p>
+                      <div className="flex flex-wrap gap-1">
+                        {stage.skills.map((skill, i) => (
+                          <span key={i} className="tag tag-indigo text-[11px]">{skill}</span>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -303,8 +253,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-gray-400">Est. timeline: {pathway.timelineTotal}</span>
+          <div className="flex items-center justify-end pt-1">
             <button onClick={generatePathway} disabled={loading} className="btn-secondary text-sm py-1.5 px-3">
               {loading ? 'Generating...' : 'Regenerate'}
             </button>
