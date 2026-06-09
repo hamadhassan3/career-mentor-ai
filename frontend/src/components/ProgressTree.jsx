@@ -28,34 +28,45 @@ const ProgressTree = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Fetch skills and achievements in parallel
-        const [itSkillsResponse, softSkillsResponse, achievementsResponse] = await Promise.all([
-          resumeProcessorAPI.getITSkills(),
-          resumeProcessorAPI.getSoftSkills(),
-          progressService.getAchievements()
-        ]);
-        
-        // Flatten the skills objects into arrays for the dropdown
-        const flattenSkills = (skillsObj) => {
-          if (Array.isArray(skillsObj)) return skillsObj;
-          if (typeof skillsObj === 'object' && skillsObj !== null) {
-            return Object.values(skillsObj).flat();
-          }
-          return [];
-        };
-        
-        const flattenedItSkills = flattenSkills(itSkillsResponse.data);
-        const flattenedSoftSkills = flattenSkills(softSkillsResponse.data);
-        
-        setItSkills(flattenedItSkills);
-        setSoftSkills(flattenedSoftSkills);
-        setAchievements(achievementsResponse || []);
-      } catch (err) {
-        console.error("Failed to load data", err);
-      } finally {
-        setLoadingSkills(false);
+      // Fetch skills and achievements in parallel. Use allSettled so that a
+      // failure in one endpoint (e.g. /it or /soft returning "service
+      // unavailable") does not prevent the others from rendering. In
+      // particular, the progress tree must still display when achievements
+      // load successfully even if the skills endpoints are down.
+      const [itSkillsResult, softSkillsResult, achievementsResult] = await Promise.allSettled([
+        resumeProcessorAPI.getITSkills(),
+        resumeProcessorAPI.getSoftSkills(),
+        progressService.getAchievements()
+      ]);
+
+      // Flatten the skills objects into arrays for the dropdown
+      const flattenSkills = (skillsObj) => {
+        if (Array.isArray(skillsObj)) return skillsObj;
+        if (typeof skillsObj === 'object' && skillsObj !== null) {
+          return Object.values(skillsObj).flat();
+        }
+        return [];
+      };
+
+      if (itSkillsResult.status === 'fulfilled') {
+        setItSkills(flattenSkills(itSkillsResult.value.data));
+      } else {
+        console.error("Failed to load IT skills", itSkillsResult.reason);
       }
+
+      if (softSkillsResult.status === 'fulfilled') {
+        setSoftSkills(flattenSkills(softSkillsResult.value.data));
+      } else {
+        console.error("Failed to load soft skills", softSkillsResult.reason);
+      }
+
+      if (achievementsResult.status === 'fulfilled') {
+        setAchievements(achievementsResult.value || []);
+      } else {
+        console.error("Failed to load achievements", achievementsResult.reason);
+      }
+
+      setLoadingSkills(false);
     };
     
     fetchData();
