@@ -3,6 +3,7 @@ import { progressService } from '../config/api-progress';
 import { resumeAPI as resumeProcessorAPI } from '../config/api-resume-processor';
 import AddAchievementModal from './AddAchievementModal';
 import AchievementDetailModal from './AchievementDetailModal';
+import { formatSkill } from '../utils/skills';
 
 const ProgressTree = () => {
   const [achievements, setAchievements] = useState([]);
@@ -204,7 +205,7 @@ const ProgressTree = () => {
                   >
                     <img
                       src={achievement.image_url}
-                      alt={achievement.skill}
+                      alt={formatSkill(achievement.skill)}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -219,7 +220,7 @@ const ProgressTree = () => {
                 {/* Achievement name and date labels - always visible */}
                 <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center gap-1">
                   <div className="bg-white/95 backdrop-blur-sm text-gray-800 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full border border-green-300 shadow-lg whitespace-nowrap max-w-32 sm:max-w-36 md:max-w-40 truncate text-center">
-                    {achievement.skill}
+                    {formatSkill(achievement.skill)}
                   </div>
                   {achievement.created_at && (
                     <div className="bg-gray-100/90 backdrop-blur-sm text-gray-600 text-xs px-2 py-1 rounded-full border border-gray-200 shadow-sm whitespace-nowrap">

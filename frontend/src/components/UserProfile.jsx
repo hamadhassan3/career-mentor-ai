@@ -4,6 +4,7 @@ import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setWarning, clearWarning, setEncouraging, setIdle } from '../store/avatarSlice';
 import SkillUploadModal from './SkillUploadModal';
+import { formatSkill } from '../utils/skills';
 
 const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToProgress }) => {
   const dispatch = useDispatch();
@@ -217,7 +218,7 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
     <div className="flex flex-wrap gap-1.5">
       {array.map((item, index) => (
         <span key={index} className={`tag ${isSkill ? 'tag-indigo' : ''}`}>
-          {item}
+          {isSkill ? formatSkill(item) : item}
         </span>
       ))}
       {array.length === 0 && <span className="text-xs text-gray-400">None listed</span>}
@@ -294,11 +295,11 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
                   onChange={(e) => handleArrayChange(field, index, e.target.value)}
                   className="input flex-1 text-sm"
                 >
-                  <option value={item}>{item}</option>
+                  <option value={item}>{formatSkill(item)}</option>
                   {Object.entries(availableSkills).map(([category, skills]) => (
                     <optgroup key={category} label={category}>
                       {skills.map(skill => (
-                        <option key={skill} value={skill}>{skill}</option>
+                        <option key={skill} value={skill}>{formatSkill(skill)}</option>
                       ))}
                     </optgroup>
                   ))}
@@ -323,7 +324,7 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
                 {Object.entries(availableSkills).map(([category, skills]) => (
                   <optgroup key={category} label={category}>
                     {skills.filter(skill => !array.includes(skill)).map(skill => (
-                      <option key={skill} value={skill}>{skill}</option>
+                      <option key={skill} value={skill}>{formatSkill(skill)}</option>
                     ))}
                   </optgroup>
                 ))}

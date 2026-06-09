@@ -3,13 +3,7 @@ import { useDispatch } from 'react-redux';
 import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
-
-// Convert a snake_case skill key into a human-readable label
-const formatSkill = (skill) =>
-  skill
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+import { formatSkill } from '../utils/skills';
 
 // Horizontal gutters (as % of width) the trail weaves between
 const LEFT = 15;

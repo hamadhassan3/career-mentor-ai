@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { progressService } from '../config/api-progress';
+import { formatSkill } from '../utils/skills';
 
 const SkillUploadModal = ({ isOpen, onClose, onSuccess, preselectedSkill = '' }) => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -53,7 +54,7 @@ const SkillUploadModal = ({ isOpen, onClose, onSuccess, preselectedSkill = '' })
         </h3>
         
         <p className="text-sm text-gray-600 mb-4">
-          Upload a screenshot of your achievement for <span className="font-medium text-indigo-600">{preselectedSkill}</span>{" "}
+          Upload a screenshot of your achievement for <span className="font-medium text-indigo-600">{formatSkill(preselectedSkill)}</span>{" "}
           to add it to your progress tree!
         </p>
 

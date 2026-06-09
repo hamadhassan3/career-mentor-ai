@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SearchableDropdown from './SearchableDropdown';
 import { progressService } from '../config/api-progress';
+import { formatSkill } from '../utils/skills';
 
 const AddAchievementModal = ({ 
   isOpen, 
@@ -117,6 +118,7 @@ const AddAchievementModal = ({
                   options={availableSkills}
                   value={selectedSkill}
                   onChange={setSelectedSkill}
+                  formatOption={formatSkill}
                   placeholder={`Select ${selectedSkillType === 'it' ? 'an IT' : 'a soft'} skill...`}
                 />
                 {availableSkills.length === 0 && !loadingSkills && (

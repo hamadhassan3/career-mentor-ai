@@ -4,6 +4,7 @@ import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setPresenting, setIdle } from '../store/avatarSlice';
 import CourseRecommendations from './CourseRecommendations';
+import { formatSkill } from '../utils/skills';
 
 const NextBestStep = ({ resumeData, targetDesignation }) => {
   const dispatch = useDispatch();
@@ -169,7 +170,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
         <div className="space-y-4 animate-fade-in-up">
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900">{recommendations.title}</h4>
+              <h4 className="font-semibold text-gray-900">{formatSkill(recommendations.title)}</h4>
               {recommendations.type && (
                 <span className="text-xs text-gray-500">{recommendations.type} Skill</span>
               )}
@@ -193,7 +194,7 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
                   className="tag tag-indigo animate-fade-in"
                   style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
                 >
-                  {skill}
+                  {formatSkill(skill)}
                 </span>
               ))}
             </div>
