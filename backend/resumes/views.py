@@ -365,7 +365,7 @@ def get_course_recommendations(request):
                 f"{course_api_url}/courses/search",
                 json={
                     "query": skill_query,
-                    "platforms": ["youtube", "coursera"],
+                    "platforms": ["coursera", "youtube"],
                     "limit": 3
                 },
                 timeout=10

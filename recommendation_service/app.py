@@ -103,6 +103,9 @@ def search_courses():
         platforms = data.get('platforms', ['coursera', 'youtube'])
         limit = data.get('limit', 10)
 
+        # Per-platform caps to avoid overwhelming the user
+        platform_caps = {'coursera': 2, 'youtube': 2}
+
         if not query:
             return jsonify({'error': 'Query parameter is required'}), 400
 
@@ -111,8 +114,9 @@ def search_courses():
 
         for platform in platforms:
             try:
+                cap = platform_caps.get(platform, limit)
                 scraper = ScraperFactory.get_scraper(platform)
-                courses = scraper.search_courses(query, limit)
+                courses = scraper.search_courses(query, cap)[:cap]
 
                 for course in courses:
                     course['platform'] = platform
