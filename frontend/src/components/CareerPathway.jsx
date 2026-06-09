@@ -231,13 +231,13 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
         <div className="animate-fade-in-up">
           {/* Start — current level */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1.5 rounded-full bg-white border border-gray-200">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50">
+            <div className="inline-flex items-center gap-2 max-w-full pl-2 pr-3.5 py-1.5 rounded-full bg-white border border-gray-200">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 flex-shrink-0">
                 <FlagIcon className="w-3.5 h-3.5 text-emerald-500" />
               </span>
-              <div className="text-left leading-tight">
-                <p className="text-[9px] uppercase tracking-wider text-gray-400">Now</p>
-                <p className="text-xs font-semibold text-gray-900 truncate max-w-[180px]">{pathway.currentLevel}</p>
+              <div className="text-left leading-tight min-w-0">
+                <p className="text-xs uppercase tracking-wider text-gray-400">Now</p>
+                <p className="text-sm font-semibold text-gray-900 break-words">{pathway.currentLevel}</p>
               </div>
             </div>
           </div>
@@ -273,7 +273,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
                     {stage.skills?.length > 0 && (
                       <div className={`flex flex-wrap gap-1 mt-1.5 ${isLeft ? '' : 'justify-end'}`}>
                         {stage.skills.map((skill, j) => (
-                          <span key={j} className="text-[11px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{skill}</span>
+                          <span key={j} className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{skill}</span>
                         ))}
                       </div>
                     )}
@@ -288,13 +288,13 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
 
           {/* Goal — target role */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 pl-2 pr-4 py-2 rounded-full bg-violet-600 text-white">
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white bg-opacity-20">
+            <div className="inline-flex items-center gap-2 max-w-full pl-2 pr-4 py-2 rounded-full bg-violet-600 text-white">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white bg-opacity-20 flex-shrink-0">
                 <TargetIcon className="w-4 h-4 text-white" />
               </span>
-              <div className="text-left leading-tight">
-                <p className="text-[9px] uppercase tracking-wider text-violet-200">Goal</p>
-                <p className="text-sm font-bold truncate max-w-[180px]">{pathway.targetRole}</p>
+              <div className="text-left leading-tight min-w-0">
+                <p className="text-xs uppercase tracking-wider text-violet-200">Goal</p>
+                <p className="text-sm font-bold break-words">{pathway.targetRole}</p>
               </div>
             </div>
           </div>

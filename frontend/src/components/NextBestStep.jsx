@@ -140,6 +140,11 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
     }
   };
 
+  // Display label for the skill type ("it" → "IT", otherwise capitalized)
+  const typeLabel = recommendations?.type
+    ? (recommendations.type.toLowerCase() === 'it' ? 'IT' : formatSkill(recommendations.type))
+    : '';
+
   return (
     <div className="card p-5">
       <div className="mb-5">
@@ -168,36 +173,28 @@ const NextBestStep = ({ resumeData, targetDesignation }) => {
         </div>
       ) : (
         <div className="space-y-4 animate-fade-in-up">
-          <div className="flex items-start justify-between">
-            <div>
-              <h4 className="font-semibold text-gray-900">{formatSkill(recommendations.title)}</h4>
-              {recommendations.type && (
-                <span className="text-xs text-gray-500">{recommendations.type} Skill</span>
-              )}
+          {/* Spotlight: the single next best skill */}
+          <div className="rounded-2xl bg-emerald-50 border border-emerald-100 px-5 py-6 text-center">
+            <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-emerald-100 mb-3">
+              <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="tag tag-amber text-xs">{recommendations.impact} Impact</span>
-              {recommendations.confidence && (
-                <span className="text-xs text-gray-400">
-                  {Math.round(recommendations.confidence * 100)}% confidence
+            <p className="text-xs font-medium uppercase tracking-wider text-emerald-600">Your next skill to learn</p>
+            <h4 className="mt-1.5 text-2xl font-bold text-gray-900 leading-tight break-words">{formatSkill(recommendations.title)}</h4>
+            {typeLabel && (
+              <p className="mt-1 text-sm text-gray-500">{typeLabel} skill</p>
+            )}
+            {recommendations.impact === 'High' && (
+              <div className="mt-4 flex justify-center">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5" />
+                  </svg>
+                  High Impact
                 </span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Recommended Skills</p>
-            <div className="flex flex-wrap gap-1.5">
-              {recommendations.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="tag tag-indigo animate-fade-in"
-                  style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
-                >
-                  {formatSkill(skill)}
-                </span>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           <CourseRecommendations courses={courses} loadingCourses={loadingCourses} />

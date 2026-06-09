@@ -4,6 +4,7 @@ import { resumeAPI } from '../config/api-resume-processor';
 import { resumeAPI as backendResumeAPI } from '../config/api-backend';
 import { setWarning, clearWarning, setEncouraging, setIdle } from '../store/avatarSlice';
 import SkillUploadModal from './SkillUploadModal';
+import SearchableDropdown from './SearchableDropdown';
 import { formatSkill } from '../utils/skills';
 
 const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToProgress }) => {
@@ -267,6 +268,9 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
   const renderSkillsArray = (label, field, array, skillType) => {
     const isEditing = editMode[field];
     const availableSkills = allSkills[skillType] || {};
+    // Flatten the categorised skills object into a single list for the
+    // searchable dropdown (same shape the Progress Tree feeds it).
+    const flatSkills = [...new Set(Object.values(availableSkills).flat())];
 
     return (
       <div>
@@ -288,47 +292,38 @@ const UserProfile = ({ resumeData, onUpdate, isReadOnly = false, onNavigateToPro
         </div>
         {isEditing ? (
           <div className="space-y-2 animate-fade-in">
-            {array.map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <select
-                  value={item}
-                  onChange={(e) => handleArrayChange(field, index, e.target.value)}
-                  className="input flex-1 text-sm"
-                >
-                  <option value={item}>{formatSkill(item)}</option>
-                  {Object.entries(availableSkills).map(([category, skills]) => (
-                    <optgroup key={category} label={category}>
-                      {skills.map(skill => (
-                        <option key={skill} value={skill}>{formatSkill(skill)}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <button onClick={() => removeArrayItem(field, index)} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-500 flex items-center justify-center transition-colors text-sm">
-                  &times;
-                </button>
-              </div>
-            ))}
-
-            {!skillsLoading && Object.keys(availableSkills).length > 0 && (
-              <select
-                onChange={(e) => {
-                  if (e.target.value && !array.includes(e.target.value)) {
-                    setFormData({ ...formData, [field]: [...array, e.target.value] });
-                  }
-                  e.target.value = '';
-                }}
-                className="input text-sm text-gray-400"
-              >
-                <option value="">+ Add a skill</option>
-                {Object.entries(availableSkills).map(([category, skills]) => (
-                  <optgroup key={category} label={category}>
-                    {skills.filter(skill => !array.includes(skill)).map(skill => (
-                      <option key={skill} value={skill}>{formatSkill(skill)}</option>
-                    ))}
-                  </optgroup>
+            {array.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {array.map((item, index) => (
+                  <span key={index} className="inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium">
+                    {formatSkill(item)}
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem(field, index)}
+                      aria-label={`Remove ${formatSkill(item)}`}
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </span>
                 ))}
-              </select>
+              </div>
+            )}
+
+            {!skillsLoading && flatSkills.length > 0 && (
+              <SearchableDropdown
+                options={flatSkills.filter((skill) => !array.includes(skill))}
+                value=""
+                onChange={(value) => {
+                  if (value && !array.includes(value)) {
+                    setFormData({ ...formData, [field]: [...array, value] });
+                  }
+                }}
+                formatOption={formatSkill}
+                placeholder="+ Add a skill"
+              />
             )}
 
             <button onClick={() => fetchSkillsByType(skillType)} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
