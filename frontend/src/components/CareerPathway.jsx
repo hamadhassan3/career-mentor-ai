@@ -11,6 +11,41 @@ const formatSkill = (skill) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
+// Horizontal gutters (as % of width) the trail weaves between
+const LEFT = 15;
+const RIGHT = 85;
+const nodeX = (index) => (index % 2 === 0 ? LEFT : RIGHT);
+
+const FlagIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 21V4" />
+    <path strokeLinejoin="round" d="M5 4h10l-2 3 2 3H5z" fill="currentColor" />
+  </svg>
+);
+
+const TargetIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+// A soft curve sweeping from one gutter to another (the path between stops)
+const TrailConnector = ({ fromX, toX }) => (
+  <div className="h-9 text-gray-300">
+    <svg className="w-full h-full" viewBox="0 0 100 36" preserveAspectRatio="none" fill="none">
+      <path
+        d={`M ${fromX} 0 C ${fromX} 18, ${toX} 18, ${toX} 36`}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  </div>
+);
+
 const CareerPathway = ({ resumeData, targetDesignation }) => {
   const dispatch = useDispatch();
   const [pathway, setPathway] = useState(null);
@@ -170,11 +205,7 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
     }
   };
 
-  const statusStyles = {
-    current: { dot: 'bg-emerald-500', line: 'border-emerald-200', bg: 'bg-emerald-50' },
-    upcoming: { dot: 'bg-amber-400', line: 'border-amber-200', bg: 'bg-amber-50' },
-    future: { dot: 'bg-gray-300', line: 'border-gray-200', bg: 'bg-gray-50' },
-  };
+  const stages = pathway?.stages || [];
 
   return (
     <div className="card p-5">
@@ -203,57 +234,78 @@ const CareerPathway = ({ resumeData, targetDesignation }) => {
           </button>
         </div>
       ) : (
-        <div className="space-y-5 animate-fade-in-up">
-          {/* Progress header */}
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-400">Current</p>
-              <p className="text-sm font-medium text-gray-900 truncate">{pathway.currentLevel}</p>
-            </div>
-            <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            <div className="flex-1 min-w-0 text-right">
-              <p className="text-xs text-gray-400">Target</p>
-              <p className="text-sm font-medium text-gray-900 truncate">{pathway.targetRole}</p>
+        <div className="animate-fade-in-up">
+          {/* Start — current level */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1.5 rounded-full bg-white border border-gray-200">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50">
+                <FlagIcon className="w-3.5 h-3.5 text-emerald-500" />
+              </span>
+              <div className="text-left leading-tight">
+                <p className="text-[9px] uppercase tracking-wider text-gray-400">Now</p>
+                <p className="text-xs font-semibold text-gray-900 truncate max-w-[180px]">{pathway.currentLevel}</p>
+              </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="space-y-0">
-            {pathway.stages.map((stage, index) => {
-              const style = statusStyles[stage.status];
-              return (
-                <div
-                  key={index}
-                  className="relative pl-7 pb-6 last:pb-0 animate-fade-in-up"
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
-                >
-                  {/* Timeline line */}
-                  {index < pathway.stages.length - 1 && (
-                    <div className={`absolute left-[9px] top-5 bottom-0 w-px border-l-2 border-dashed ${style.line}`} />
-                  )}
-                  {/* Timeline dot */}
-                  <div className={`absolute left-0 top-1 w-[18px] h-[18px] rounded-full border-[3px] border-white ${style.dot} shadow-sm`} />
+          {/* The weaving trail of steps */}
+          {stages.map((stage, i) => {
+            const x = nodeX(i);
+            const fromX = i === 0 ? 50 : nodeX(i - 1);
+            const isLeft = x === LEFT;
+            const isCurrent = stage.status === 'current';
+            return (
+              <React.Fragment key={i}>
+                <TrailConnector fromX={fromX} toX={x} />
+                <div className={`relative ${isLeft ? 'pl-[30%] pr-1' : 'pr-[30%] pl-1 text-right'}`}>
+                  {/* vertical rail beside the step */}
+                  <div className="absolute top-8 bottom-0 w-0.5 -translate-x-1/2 bg-gray-300" style={{ left: `${x}%` }} />
 
-                  <div className={`${style.bg} rounded-xl p-4`}>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">{stage.title}</h4>
+                  {/* numbered step */}
+                  <div
+                    className={`absolute top-0 z-10 -translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
+                      isCurrent
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-violet-50 text-violet-600 border border-violet-200'
+                    }`}
+                    style={{ left: `${x}%` }}
+                  >
+                    {i + 1}
+                  </div>
 
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 mb-1.5">Skills</p>
-                      <div className="flex flex-wrap gap-1">
-                        {stage.skills.map((skill, i) => (
-                          <span key={i} className="tag tag-indigo text-[11px]">{skill}</span>
+                  {/* step content */}
+                  <div className="relative z-10 min-h-[2.5rem]">
+                    <h4 className="text-sm font-semibold text-gray-900">{stage.title}</h4>
+                    {stage.skills?.length > 0 && (
+                      <div className={`flex flex-wrap gap-1 mt-1.5 ${isLeft ? '' : 'justify-end'}`}>
+                        {stage.skills.map((skill, j) => (
+                          <span key={j} className="text-[11px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{skill}</span>
                         ))}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
-              );
-            })}
+              </React.Fragment>
+            );
+          })}
+
+          {/* Trail into the goal */}
+          <TrailConnector fromX={stages.length === 0 ? 50 : nodeX(stages.length - 1)} toX={50} />
+
+          {/* Goal — target role */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 pl-2 pr-4 py-2 rounded-full bg-violet-600 text-white">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white bg-opacity-20">
+                <TargetIcon className="w-4 h-4 text-white" />
+              </span>
+              <div className="text-left leading-tight">
+                <p className="text-[9px] uppercase tracking-wider text-violet-200">Goal</p>
+                <p className="text-sm font-bold truncate max-w-[180px]">{pathway.targetRole}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center justify-end pt-1">
+          <div className="flex items-center justify-end pt-4">
             <button onClick={generatePathway} disabled={loading} className="btn-secondary text-sm py-1.5 px-3">
               {loading ? 'Generating...' : 'Regenerate'}
             </button>
