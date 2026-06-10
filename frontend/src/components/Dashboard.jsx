@@ -60,9 +60,11 @@ export default function Dashboard({ shouldShowUpload = false, onUploadStateChang
         title: `Resume - ${new Date().toLocaleDateString()}`
       };
       
-      await resumeAPI.createResume(resumeDataWithMetadata);
-      
-      setResumeData(resumeDataWithMetadata);
+      const createdResume = await resumeAPI.createResume(resumeDataWithMetadata);
+
+      // Use the backend response (includes is_active, id, etc.) so the UI
+      // reflects the active resume immediately without needing a page reload.
+      setResumeData(createdResume.data);
       setTargetDesignation(designation);
       setShowUpload(false);
       onUploadStateChange?.(false);
