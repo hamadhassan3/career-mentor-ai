@@ -6,51 +6,47 @@ import os
 import requests
 
 
-class APIYILLm:
-    """Custom LLM for APIYI (Free Chinese AI aggregator)"""
-    
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.base_url = "https://api.apiyi.com/v1/chat/completions"
-    
+class ProxyLLM:
+    """Custom LLM proxy hosted on AWS Lambda (public access, Gemini-backed)"""
+
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
     def invoke(self, messages):
-        # Convert LangChain messages to OpenAI format (APIYI is OpenAI-compatible)
-        api_messages = []
+        # Convert LangChain messages to Gemini-native format.
+        # SystemMessage -> systemInstruction; Human/AI -> contents (roles user/model).
+        contents = []
+        system_parts = []
         for msg in messages:
-            if hasattr(msg, 'content'):
-                if msg.__class__.__name__ == 'SystemMessage':
-                    api_messages.append({"role": "system", "content": msg.content})
-                elif msg.__class__.__name__ == 'HumanMessage':
-                    api_messages.append({"role": "user", "content": msg.content})
-                elif msg.__class__.__name__ == 'AIMessage':
-                    api_messages.append({"role": "assistant", "content": msg.content})
-        
-        payload = {
-            "model": "qwen-plus",  # Use Qwen model through APIYI
-            "messages": api_messages,
-            "temperature": 0.7,
-            "max_tokens": 1024
-        }
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
+            if not hasattr(msg, 'content'):
+                continue
+            cls = msg.__class__.__name__
+            if cls == 'SystemMessage':
+                system_parts.append({"text": msg.content})
+            elif cls == 'HumanMessage':
+                contents.append({"role": "user", "parts": [{"text": msg.content}]})
+            elif cls == 'AIMessage':
+                contents.append({"role": "model", "parts": [{"text": msg.content}]})
+
+        payload = {"contents": contents}
+        if system_parts:
+            payload["systemInstruction"] = {"parts": system_parts}
+        headers = {"Content-Type": "application/json"}
+
         try:
             response = requests.post(self.base_url, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             result = response.json()
-            
+
             # Create a simple response object with content attribute
             class SimpleResponse:
                 def __init__(self, content):
                     self.content = content
-            
-            return SimpleResponse(result["choices"][0]["message"]["content"])
-            
+
+            return SimpleResponse(result["text"])
+
         except Exception as e:
-            raise Exception(f"APIYI API error: {e}")
+            raise Exception(f"Proxy LLM error: {e}")
 
 
 class LLMService:
@@ -58,11 +54,11 @@ class LLMService:
         environment = os.getenv('ENVIRONMENT', 'development')
         
         if environment == 'production':
-            # Use APIYI for production (Asia East) - 300M free tokens, no credit card
-            apiyi_key = os.getenv('APIYI_API_KEY')
-            if apiyi_key:
-                self.model = APIYILLm(apiyi_key)
-                self.model_name = "qwen-plus"
+            # Use custom AWS Lambda proxy for production (Gemini-backed, public access)
+            proxy_url = os.getenv('LLM_PROXY_URL')
+            if proxy_url:
+                self.model = ProxyLLM(proxy_url)
+                self.model_name = "gemini-3.1-flash-lite"
             else:
                 self.model = None
                 self.model_name = None
