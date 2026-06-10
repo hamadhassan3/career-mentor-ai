@@ -62,6 +62,30 @@ class NextBestStep(models.Model):
         return f"{self.resume.user.username} - Next Step: {self.title}"
 
 
+class SkillCourseRecommendation(models.Model):
+    """
+    Cached course/YouTube recommendations for a resume's next best skill.
+
+    Generated once from the external recommendation service and persisted so
+    page refreshes read from the database instead of re-calling the service.
+    Tied to NextBestStep via CASCADE so it is removed automatically when the
+    next best skill is deleted or regenerated.
+    """
+    next_step = models.OneToOneField(NextBestStep, on_delete=models.CASCADE, related_name='course_recommendation')
+    skill = models.CharField(max_length=255)  # The skill the recommendations were generated for
+    courses = models.JSONField(default=list, blank=True)  # Common response structure (courses + youtube)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'skill_course_recommendations'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.next_step.resume.user.username} - Courses: {self.skill}"
+
+
 class CareerPathway(models.Model):
     resume = models.OneToOneField(Resume, on_delete=models.CASCADE, related_name='career_path')
     current_level = models.CharField(max_length=255, blank=True, null=True)

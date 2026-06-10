@@ -7,7 +7,7 @@ from django.db import transaction
 from django.conf import settings
 import requests
 import os
-from .models import Resume, NextBestStep, CareerPathway, CareerStage
+from .models import Resume, NextBestStep, CareerPathway, CareerStage, SkillCourseRecommendation
 from .serializers import (
     ResumeSerializer, ResumeListSerializer, NextBestStepSerializer,
     CareerPathwaySerializer, CareerStageSerializer, ResumeWithRecommendationsSerializer
@@ -196,13 +196,19 @@ def save_next_best_step(request):
             resume=resume,
             defaults=request.data
         )
-        
+
         if not created:
             # Update existing record
+            old_title = next_step.title
             for field, value in request.data.items():
                 if hasattr(next_step, field):
                     setattr(next_step, field, value)
             next_step.save()
+
+            # Regenerated to a different skill: drop the cached course/video
+            # recommendations so they are regenerated on the next courses fetch
+            if next_step.title != old_title:
+                SkillCourseRecommendation.objects.filter(next_step=next_step).delete()
         
         serializer = NextBestStepSerializer(next_step)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -355,11 +361,20 @@ def get_course_recommendations(request):
         skill_query = next_step.title
         if not skill_query or skill_query == 'No recommendations available':
             return Response({'courses': []}, status=status.HTTP_200_OK)
-        
+
+        # Return cached recommendations if they exist for the current skill.
+        # Avoids re-calling the service on every page refresh.
+        cached = SkillCourseRecommendation.objects.filter(next_step=next_step).first()
+        if cached and cached.skill == skill_query:
+            return Response({
+                'skill': cached.skill,
+                'courses': cached.courses,
+            })
+
         try:
             # Get course recommendation service URL from environment
             course_api_url = os.getenv('COURSE_RECOMMENDATION_API_BASE_URL', 'http://localhost:5051')
-            
+
             # Make request to course recommendation service
             response = requests.post(
                 f"{course_api_url}/courses/search",
@@ -370,12 +385,20 @@ def get_course_recommendations(request):
                 },
                 timeout=10
             )
-            
+
             if response.status_code == 200:
                 course_data = response.json()
+                courses = course_data.get('courses', [])[:]  # Ensure only 3 courses
+
+                # Persist on first generation so refreshes read from the DB.
+                SkillCourseRecommendation.objects.update_or_create(
+                    next_step=next_step,
+                    defaults={'skill': skill_query, 'courses': courses},
+                )
+
                 return Response({
                     'skill': skill_query,
-                    'courses': course_data.get('courses', [])[:]  # Ensure only 3 courses
+                    'courses': courses
                 })
             else:
                 return Response({
@@ -383,7 +406,7 @@ def get_course_recommendations(request):
                     'courses': [],
                     'error': 'Failed to fetch course recommendations'
                 }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-                
+
         except requests.RequestException as e:
             return Response({
                 'skill': skill_query,
