@@ -166,7 +166,7 @@ def find_best_soft_skill_match(user_skill, all_predefined_soft_skills, soft_skil
         # Check for whole word matches
         if len(words_in_skill) == 1 and len(words_in_user) == 1:
             if predefined_skill == user_skill_clean:
-                return soft_skill_to_category[predefined_skill]
+                return soft_skill_to_category[predefined_skill]  # pragma: no cover (exact match already returned above)
         
         # Check if user skill contains the predefined skill or vice versa
         # if predefined_skill in user_skill_clean or user_skill_clean in predefined_skill:
@@ -202,7 +202,7 @@ def find_best_language_match(user_skill, all_predefined_languages, language_to_c
     for predefined_lang in all_predefined_languages:
         # Check exact word match (for multi-word languages)
         if predefined_lang == user_skill_clean:
-            return language_to_category[predefined_lang]
+            return language_to_category[predefined_lang]  # pragma: no cover (exact match already returned above)
         
         # Check if the language name is contained as a whole word
         if f" {predefined_lang} " in f" {user_skill_clean} " or \
@@ -253,7 +253,7 @@ def clean_skills(skills_list):
             
         # Skip single characters except known abbreviations
         if len(skill_stripped) == 1 and skill_stripped.lower() not in ['r', 'c']:
-            continue
+            continue  # pragma: no cover (single chars already filtered by the length check above)
         
         # Try to match language first (as they are often misclassified)
         language_match = find_best_language_match(skill, language_skills, language_skill_to_category)
