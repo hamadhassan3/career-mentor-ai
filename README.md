@@ -43,10 +43,10 @@ Flask microservices and a set of external AI / content services.
 
 - **Résumé understanding** — parse PDF/DOCX/TXT résumés and normalize skills,
   designations, education, and experience onto a standardized vocabulary.
-- **Next Best Skill** — ML predictions of what to learn next (LSTM multi-output
-  + XGBoost top-1 classifier).
+- **Next Best Skill** — ML prediction of the single best skill to learn next
+  (XGBoost top-1 classifier).
 - **Career Pathway** — a multi-step roadmap from your current role to a target
-  role.
+  role (LSTM multi-output model).
 - **Course & video recommendations** — aggregated from Coursera (scraping) and
   YouTube (Data API v3).
 - **Daily nudge** — an LLM-generated motivational message, refreshed every 24h.
@@ -55,6 +55,39 @@ Flask microservices and a set of external AI / content services.
 - **Progress tree** — track achievements as leaves on a growing tree, with
   screenshots stored in S3.
 - **Secure accounts** — JWT auth with optional TOTP two-factor authentication.
+
+---
+
+## Meet Fawkes — the Avatar Mentor
+
+FawkesPath is guided by **Fawkes**, an on-screen avatar mentor (a friendly fox)
+that gives the platform a warm, human feel. Fawkes lives in the corner of the
+app, greets you when you've been idle, opens into the career-chat window when
+clicked, and **reacts to what's happening** by switching between expressive
+emotional states.
+
+The avatar is driven by a small Redux state machine (`avatarSlice`) — different
+parts of the app dispatch a state, and the matching artwork is shown:
+
+| State | When it appears |
+| --- | --- |
+| `idle` | Default resting state, waiting in the corner. |
+| `listening` | While you're typing or interacting with the chat. |
+| `thinking` | A request has been sent and Fawkes is processing. |
+| `analyzing` | Crunching résumé data or generating predictions. |
+| `presenting` | Sharing insights or recommendations. |
+| `encouraging` | Cheering you on after progress. |
+| `celebrating` | Marking a milestone or new achievement. |
+| `error` | Something went wrong. |
+
+A few of Fawkes' expressions:
+
+| Idle | Thinking | Encouraging | Celebrating |
+| --- | --- | --- | --- |
+| ![Fawkes idle](frontend/public/avatar/idle.png) | ![Fawkes thinking](frontend/public/avatar/thinking.png) | ![Fawkes encouraging](frontend/public/avatar/encouraging.png) | ![Fawkes celebrating](frontend/public/avatar/celebrating.png) |
+
+> The full set of state artwork lives in
+> [`frontend/public/avatar/`](frontend/public/avatar/).
 
 ---
 
